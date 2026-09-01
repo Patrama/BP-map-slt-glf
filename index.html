@@ -1,0 +1,72 @@
+<!-- @format -->
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <title>Modular Blueprint Layout Viewer</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div id="app-container">
+      <!-- Left Navigation Layer Control -->
+      <aside id="left-menu" class="open">
+        <!-- Sidebar Toggle Floating Button -->
+        <button id="sidebar-toggle" aria-label="Toggle Menu">
+          <span class="toggle-icon">◄</span>
+        </button>
+
+        <h2>Layer Controls</h2>
+
+        <!-- Search & Global Control Toolbar -->
+        <div class="toolbar-container">
+          <div class="toolbar-top">
+            <label
+              class="toolbar-checkbox-label left"
+              title="Toggle All Layers"
+            >
+              <input type="checkbox" id="toggle-all-cb" />
+              <span>All</span>
+            </label>
+
+            <label
+              class="toolbar-checkbox-label right"
+              title="Toggle Search Results Only"
+            >
+              <span>Results Only</span>
+              <input type="checkbox" id="toggle-results-cb" />
+            </label>
+          </div>
+
+          <input
+            type="text"
+            id="search-input"
+            placeholder="Search components..."
+            autocomplete="off"
+          />
+        </div>
+
+        <!-- Search Results Container -->
+        <div
+          id="search-results-container"
+          class="search-results-list"
+          style="display: none"
+        ></div>
+
+        <!-- Accordion Tree View -->
+        <div id="tree-root" class="accordion-root"></div>
+      </aside>
+
+      <!-- SVG Stage Viewport -->
+      <main id="viewport-container">
+        <div id="svg-stage"></div>
+      </main>
+    </div>
+
+    <script type="module" src="app.js"></script>
+  </body>
+</html>

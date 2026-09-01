@@ -1,0 +1,295 @@
+/** @format */
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body,
+html {
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  font-family:
+    system-ui,
+    -apple-system,
+    sans-serif;
+  /* background-color: #1a1a1a; */
+  background-color: #ffffff;
+  color: #fff;
+}
+
+#app-container {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+/* Left Sidebar Menu & Slide Toggle */
+#left-menu {
+  width: 320px;
+  height: 100%;
+  background: #242424;
+  border-right: 1px solid #333;
+  display: flex;
+  flex-direction: column;
+  padding: 1rem;
+  z-index: 1000;
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.5);
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform: translateX(-100%);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+#left-menu.open {
+  transform: translateX(0);
+}
+
+/* Toggle Floating Button */
+#sidebar-toggle {
+  position: absolute;
+  top: 12px;
+  right: -42px;
+  width: 42px;
+  height: 42px;
+  background: #242424;
+  border: 1px solid #333;
+  border-left: none;
+  border-radius: 0 8px 8px 0;
+  color: #4da6ff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 1001;
+  box-shadow: 4px 0 8px rgba(0, 0, 0, 0.3);
+}
+
+.toggle-icon {
+  font-size: 0.8rem;
+  transition: transform 0.3s ease;
+}
+
+#left-menu.open #sidebar-toggle .toggle-icon {
+  transform: rotate(0deg);
+}
+
+#left-menu:not(.open) #sidebar-toggle .toggle-icon {
+  transform: rotate(180deg);
+}
+
+#left-menu h2 {
+  font-size: 1.1rem;
+  margin-bottom: 0.75rem;
+  color: #4da6ff;
+}
+
+/* Toolbar & Search Controls */
+.toolbar-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+  background: #1e1e1e;
+  padding: 0.6rem;
+  border-radius: 6px;
+  border: 1px solid #333;
+}
+
+.toolbar-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.toolbar-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.8rem;
+  color: #aaa;
+  cursor: pointer;
+  padding: 0.2rem;
+}
+
+#search-input {
+  width: 100%;
+  padding: 0.5rem 0.6rem;
+  background: #2a2a2a;
+  border: 1px solid #444;
+  border-radius: 4px;
+  color: #fff;
+  font-size: 0.85rem;
+  outline: none;
+}
+
+#search-input:focus {
+  border-color: #4da6ff;
+}
+
+/* Accordion & Tree UI */
+.accordion-root {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.tree-node {
+  margin-top: 0.2rem;
+}
+
+.accordion-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #2d2d2d;
+  padding: 0.6rem;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-bottom: 0.2rem;
+}
+
+.accordion-title-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+}
+
+.chevron {
+  font-size: 0.7rem;
+  transition: transform 0.2s ease;
+  color: #888;
+}
+
+.accordion-node.open > .accordion-header .chevron {
+  transform: rotate(90deg);
+}
+
+.accordion-content {
+  display: none;
+  padding-left: 0.6rem;
+  margin-bottom: 0.4rem;
+}
+
+.accordion-node.open > .accordion-content {
+  display: block;
+}
+
+.tree-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  padding: 0.4rem 0; /* Expanded touch target for mobile */
+}
+
+/* Search Results Panel */
+.search-results-list {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.search-item {
+  background: #2a2a2a;
+  padding: 0.55rem;
+  border-radius: 4px;
+  border-left: 3px solid #4da6ff;
+}
+
+.search-path {
+  font-size: 0.72rem;
+  color: #888;
+  margin-bottom: 0.25rem;
+  word-break: break-word;
+}
+
+.search-target {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+}
+
+/* Viewport Engine Canvas */
+#viewport-container {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+  cursor: grab;
+  touch-action: none;
+}
+
+#viewport-container:active {
+  cursor: grabbing;
+}
+
+#svg-stage {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-origin: 0 0;
+  will-change: transform;
+}
+
+.svg-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  display: none;
+}
+
+.svg-layer img {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* ==========================================================================
+   MOBILE OPTIMIZATIONS (<768px)
+   ========================================================================== */
+@media (max-width: 767px) {
+  #left-menu {
+    width: 100vw; /* Take full viewport width when opened on mobile */
+    max-width: 100vw;
+    border-right: none;
+  }
+
+  #sidebar-toggle {
+    right: 12px; /* Position toggle inside top bar area when full screen */
+    top: 12px;
+    border-radius: 6px;
+    border: 1px solid #444;
+  }
+
+  #left-menu:not(.open) #sidebar-toggle {
+    right: -48px; /* Offset outside canvas when collapsed */
+    top: 12px;
+  }
+
+  /* Optimize padding & input scale to prevent mobile zoom glitches */
+  #search-input {
+    font-size: 16px; /* Prevents auto-zoom on iOS Safari */
+  }
+
+  .tree-label input[type="checkbox"],
+  .toolbar-checkbox-label input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+  }
+}
