@@ -6,30 +6,24 @@ export const CONFIG = {
     max: 10,
     sensitivity: 0.0015,
   },
-  // Inversed for CSS z-index (Top of Structure.md gets highest integer z-index)
-  // Total entries = 6, so item 1 gets z-index: 60, item 6 gets z-index: 10
-  zIndices: {
-    light: 60,
-    dinningRoom: 50,
-    storageBathKitchen: 40,
-    garage: 30,
-    ceiling: 20,
-    wall: 10,
+  // Base Functional Priority Levels mapped to CSS z-index values
+  zPriorityMap: {
+    light: 80, // Priority 1
+    label: 70, // Priority 2
+    ac: 60, // Priority 3
+    grille: 50, // Priority 4
+    supply: 40, // Priority 5
+    return: 30, // Priority 6
+    ceiling: 20, // Priority 7
+    wall: 10, // Priority 8
   },
 };
 
-// Unified Tree Structure matching structure.md
 export const STRUCTURE_DATA = [
-  {
-    id: "light",
-    label: "1. Light",
-    svgPath: "assets/light.svg",
-    zGroup: "light",
-  },
+  { id: "light", label: "1. Light", svgPath: "assets/light.svg" },
   {
     id: "dinningRoom",
     label: "2. Dinning Room",
-    zGroup: "dinningRoom",
     children: [
       {
         id: "dinning_2_5pk",
@@ -180,7 +174,6 @@ export const STRUCTURE_DATA = [
   {
     id: "storageBathKitchen",
     label: "3. Storage Bathroom Kitchen",
-    zGroup: "storageBathKitchen",
     children: [
       { id: "sbk_label", label: "1. Label", svgPath: "assets/sbk/label.svg" },
       { id: "sbk_ac", label: "2. AC", svgPath: "assets/sbk/ac.svg" },
@@ -221,7 +214,6 @@ export const STRUCTURE_DATA = [
   {
     id: "garage",
     label: "4. Garage",
-    zGroup: "garage",
     children: [
       {
         id: "garage_2pk",
@@ -313,11 +305,6 @@ export const STRUCTURE_DATA = [
       },
     ],
   },
-  {
-    id: "ceiling",
-    label: "5. Ceiling",
-    svgPath: "assets/ceiling.svg",
-    zGroup: "ceiling",
-  },
-  { id: "wall", label: "6. Wall", svgPath: "assets/wall.svg", zGroup: "wall" },
+  { id: "ceiling", label: "5. Ceiling", svgPath: "assets/ceiling.svg" },
+  { id: "wall", label: "6. Wall", svgPath: "assets/wall.svg" },
 ];
