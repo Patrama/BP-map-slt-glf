@@ -27,7 +27,7 @@ export const STRUCTURE_DATA = [
     children: [
       {
         id: "dinning_2_5pk",
-        label: "A. 2.5 PK - Parent Room",
+        label: "A. 3 PK - Parent Room",
         children: [
           {
             id: "d_2_5_label",
