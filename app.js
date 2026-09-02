@@ -1,8 +1,15 @@
 /** @format */
 
-import { CONFIG, STRUCTURE_DATA } from "./CONFIG.js";
+import { CONFIG_1ST_FLOOR, STRUCTURE_1ST_FLOOR } from "./f1_CONFIG.js";
+import { CONFIG_2ND_FLOOR, STRUCTURE_2ND_FLOOR } from "./f2_CONFIG.js";
 
-// Global Viewport State
+// Combine structural data for all floors
+const FLOORS_DATA = [STRUCTURE_1ST_FLOOR, STRUCTURE_2ND_FLOOR];
+
+// Since configs are identical, standardizing to a single configuration source works cleanly
+const DEFAULT_Z_MAP = CONFIG_2ND_FLOOR.zPriorityMap;
+const ZOOM_CONFIG = CONFIG_2ND_FLOOR.zoom;
+
 const state = {
   zoom: 1,
   panX: 0,
@@ -28,20 +35,23 @@ const searchResultsContainer = document.getElementById(
 const toggleAllCb = document.getElementById("toggle-all-cb");
 const toggleResultsCb = document.getElementById("toggle-results-cb");
 
-// Toggle Sidebar Drawer
-sidebarToggle.addEventListener("click", () => {
+// Handle sidebar toggling cleanly
+sidebarToggle.addEventListener("click", (e) => {
+  e.stopPropagation();
   leftMenu.classList.toggle("open");
   localStorage.setItem("sidebar_open", leftMenu.classList.contains("open"));
 });
 
-// Restore Sidebar State on Reload
+// Restore saved sidebar state on load
 if (localStorage.getItem("sidebar_open") === "false") {
   leftMenu.classList.remove("open");
+} else {
+  leftMenu.classList.add("open");
 }
 
 function getFunctionalZIndex(node) {
   const identifier = `${node.id}_${node.svgPath || ""}`.toLowerCase();
-  const map = CONFIG.zPriorityMap;
+  const map = DEFAULT_Z_MAP;
 
   if (identifier.includes("light")) return map.light;
   if (identifier.includes("label")) return map.label;
@@ -53,14 +63,13 @@ function getFunctionalZIndex(node) {
   if (identifier.includes("ret") || identifier.includes("return"))
     return map.return;
   if (identifier.includes("ceiling")) return map.ceiling;
+  if (identifier.includes("dor") || identifier.includes("door"))
+    return map.door;
   if (identifier.includes("wall")) return map.wall;
 
   return 1;
 }
 
-/**
- * High-Performance Inline SVG Fetching (Eliminates Pixelation Blur)
- */
 async function loadInlineSVG(url, container) {
   try {
     const res = await fetch(url);
@@ -80,9 +89,6 @@ async function loadInlineSVG(url, container) {
   }
 }
 
-/**
- * Initializes Canvas Stage with Crisp Vector Elements
- */
 function initSVGStage(nodes) {
   nodes.forEach((node) => {
     if (node.svgPath) {
@@ -93,7 +99,6 @@ function initSVGStage(nodes) {
       layer.id = `layer-${node.id}`;
       layer.style.zIndex = computedZ;
 
-      // Inline fetch SVG for infinite sharpness on zoom
       loadInlineSVG(node.svgPath, layer);
       stage.appendChild(layer);
     }
@@ -104,9 +109,6 @@ function initSVGStage(nodes) {
   });
 }
 
-/**
- * Render Accordion Tree UI with Persistent Memory
- */
 function renderAccordion(nodes, container, level = 0) {
   nodes.forEach((node) => {
     const nodeDiv = document.createElement("div");
@@ -116,6 +118,10 @@ function renderAccordion(nodes, container, level = 0) {
 
     if (node.children) {
       nodeDiv.classList.add("accordion-node");
+
+      if (level === 0) {
+        nodeDiv.classList.add("open");
+      }
 
       const header = document.createElement("div");
       header.className = "accordion-header";
@@ -149,15 +155,7 @@ function renderAccordion(nodes, container, level = 0) {
       nodeDiv.appendChild(content);
 
       header.addEventListener("click", () => {
-        const isOpen = nodeDiv.classList.contains("open");
-        if (level === 0 && !isOpen) {
-          container
-            .querySelectorAll(".accordion-node.open")
-            .forEach((openNode) => {
-              openNode.classList.remove("open");
-            });
-        }
-        nodeDiv.classList.toggle("open", !isOpen);
+        nodeDiv.classList.toggle("open");
       });
     } else {
       const label = document.createElement("label");
@@ -178,7 +176,6 @@ function renderAccordion(nodes, container, level = 0) {
 
     container.appendChild(nodeDiv);
 
-    // Apply restored state immediately
     if (isInitiallyChecked) {
       const svgLayer = document.getElementById(`layer-${node.id}`);
       if (svgLayer) svgLayer.style.display = "block";
@@ -186,9 +183,6 @@ function renderAccordion(nodes, container, level = 0) {
   });
 }
 
-/**
- * Toggle Cascade Engine + Local Storage Save
- */
 function toggleCascade(node, isChecked) {
   const cb = document.getElementById(`cb-${node.id}`);
   if (cb) cb.checked = isChecked;
@@ -198,7 +192,6 @@ function toggleCascade(node, isChecked) {
     svgLayer.style.display = isChecked ? "block" : "none";
   }
 
-  // Update persistent state object
   state.savedCheckedStates[node.id] = isChecked;
   localStorage.setItem(
     "blueprint_layers",
@@ -210,9 +203,6 @@ function toggleCascade(node, isChecked) {
   }
 }
 
-/**
- * Search Engine
- */
 function searchTree(nodes, query, path = []) {
   let results = [];
   nodes.forEach((node) => {
@@ -244,7 +234,7 @@ function handleSearch(query) {
   searchResultsContainer.style.display = "flex";
   searchResultsContainer.innerHTML = "";
 
-  const results = searchTree(STRUCTURE_DATA, query);
+  const results = searchTree(FLOORS_DATA, query);
   state.activeSearchResults = results.map((r) => r.node);
 
   if (results.length === 0) {
@@ -284,7 +274,7 @@ function handleSearch(query) {
 
 toggleAllCb.addEventListener("change", (e) => {
   const isChecked = e.target.checked;
-  STRUCTURE_DATA.forEach((node) => toggleCascade(node, isChecked));
+  FLOORS_DATA.forEach((node) => toggleCascade(node, isChecked));
   if (searchInput.value) handleSearch(searchInput.value);
 });
 
@@ -296,9 +286,6 @@ toggleResultsCb.addEventListener("change", (e) => {
 
 searchInput.addEventListener("input", (e) => handleSearch(e.target.value));
 
-/**
- * Mobile Touch & Pinch Zoom
- */
 let initialPinchDistance = null;
 let initialTouchZoom = 1;
 
@@ -336,8 +323,8 @@ viewport.addEventListener(
       const currentDistance = getTouchDistance(e.touches);
       const scale = currentDistance / initialPinchDistance;
       const newZoom = Math.min(
-        Math.max(CONFIG.zoom.min, initialTouchZoom * scale),
-        CONFIG.zoom.max,
+        Math.max(ZOOM_CONFIG.min, initialTouchZoom * scale),
+        ZOOM_CONFIG.max,
       );
 
       const rect = viewport.getBoundingClientRect();
@@ -363,9 +350,6 @@ viewport.addEventListener("touchend", (e) => {
   if (e.touches.length === 0) state.isDragging = false;
 });
 
-/**
- * Desktop Wheel & Pan Engine
- */
 function updateTransform() {
   stage.style.transform = `translate(${state.panX}px, ${state.panY}px) scale(${state.zoom})`;
 }
@@ -374,10 +358,10 @@ viewport.addEventListener(
   "wheel",
   (e) => {
     e.preventDefault();
-    const zoomFactor = 1 - e.deltaY * CONFIG.zoom.sensitivity;
+    const zoomFactor = 1 - e.deltaY * ZOOM_CONFIG.sensitivity;
     const newZoom = Math.min(
-      Math.max(CONFIG.zoom.min, state.zoom * zoomFactor),
-      CONFIG.zoom.max,
+      Math.max(ZOOM_CONFIG.min, state.zoom * zoomFactor),
+      ZOOM_CONFIG.max,
     );
 
     const rect = viewport.getBoundingClientRect();
@@ -410,7 +394,6 @@ window.addEventListener("mouseup", () => {
   state.isDragging = false;
 });
 
-// Center and Fit Screen Viewport
 function resetViewportCenter() {
   const rect = viewport.getBoundingClientRect();
   state.panX = rect.width / 4;
@@ -419,10 +402,9 @@ function resetViewportCenter() {
   updateTransform();
 }
 
-// App Initialization
 function init() {
-  initSVGStage(STRUCTURE_DATA);
-  renderAccordion(STRUCTURE_DATA, treeRoot);
+  initSVGStage(FLOORS_DATA);
+  renderAccordion(FLOORS_DATA, treeRoot);
   resetViewportCenter();
 }
 
