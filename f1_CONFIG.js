@@ -180,38 +180,38 @@ export const STRUCTURE_1ST_FLOOR = {
       children: [
         {
           id: "f1_sbk_label",
-          label: "1. Label",
+          label: "Label",
           svgPath: "assets/f1/sbk/label.svg",
         },
-        { id: "f1_sbk_ac", label: "2. AC", svgPath: "assets/f1/sbk/ac.svg" },
+        { id: "f1_sbk_ac", label: "AC", svgPath: "assets/f1/sbk/ac.svg" },
         {
           id: "f1_sbk_return",
-          label: "3. Return",
+          label: "Return",
           children: [
             {
               id: "f1_sbk_ret_grile",
-              label: "A. Grile",
+              label: "Grile",
               svgPath: "assets/f1/sbk/ret_grile.svg",
             },
             {
               id: "f1_sbk_ret_duct",
-              label: "B. Duct",
+              label: "Duct",
               svgPath: "assets/f1/sbk/ret_duct.svg",
             },
           ],
         },
         {
           id: "f1_sbk_supply",
-          label: "4. Supply",
+          label: "Supply",
           children: [
             {
               id: "f1_sbk_sup_grile",
-              label: "A. Grile",
+              label: "Grile",
               svgPath: "assets/f1/sbk/sup_grile.svg",
             },
             {
               id: "f1_sbk_sup_duct",
-              label: "B. Duct",
+              label: "Duct",
               svgPath: "assets/f1/sbk/sup_duct.svg",
             },
           ],
