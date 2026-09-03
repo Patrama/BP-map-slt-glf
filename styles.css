@@ -74,7 +74,8 @@ html {
 /* Toggle Floating Button */
 #sidebar-toggle {
   position: absolute;
-  top: 12px;
+  /* top: 12px; */
+  bottom: 12px;
   right: -42px;
   width: 42px;
   height: 42px;
@@ -290,14 +291,16 @@ html {
 
   #sidebar-toggle {
     right: 12px; /* Position toggle inside top bar area when full screen */
-    top: 12px;
+    /* top: 12px; */
+    bottom: 12px;
     border-radius: 6px;
     border: 1px solid #444;
   }
 
   #left-menu:not(.open) #sidebar-toggle {
     right: -48px; /* Offset outside canvas when collapsed */
-    top: 12px;
+    /* top: 12px; */
+    bottom: 12px;
   }
 
   /* Optimize padding & input scale to prevent mobile zoom glitches */
