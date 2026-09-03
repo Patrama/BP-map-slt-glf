@@ -90,7 +90,12 @@ function getFunctionalZIndex(node) {
   if (identifier.includes("light")) return map.light;
   if (identifier.includes("label")) return map.label;
   if (identifier.includes("ac")) return map.ac;
-  if (identifier.includes("grile") || identifier.includes("grille"))
+  if (
+    identifier.includes("gs") ||
+    identifier.includes("gr") ||
+    identifier.includes("grile") ||
+    identifier.includes("grille")
+  )
     return map.grille;
   if (identifier.includes("sup") || identifier.includes("supply"))
     return map.supply;
