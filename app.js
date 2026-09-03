@@ -1,7 +1,15 @@
 /** @format */
 
-import { CONFIG_1ST_FLOOR, STRUCTURE_1ST_FLOOR } from "./f1_CONFIG.js";
-import { CONFIG_2ND_FLOOR, STRUCTURE_2ND_FLOOR } from "./f2_CONFIG.js";
+import {
+  CONFIG_1ST_FLOOR,
+  STRUCTURE_1ST_FLOOR,
+} from "./floor-config/f1_CONFIG.js";
+
+import {
+  CONFIG_2ND_FLOOR,
+  STRUCTURE_2ND_FLOOR,
+} from "./floor-config/f2_CONFIG.js";
+
 import { MeasurementTool } from "./line-draw/measurement.js";
 
 // Combine structural data for all floors

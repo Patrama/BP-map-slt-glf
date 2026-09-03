@@ -18,28 +18,8 @@ html {
     system-ui,
     -apple-system,
     sans-serif;
-  /* background-color: #1a1a1a; */
   background-color: #ffffff;
   color: #fff;
-}
-
-.svg-layer {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  display: none;
-}
-
-/* Force crisp vector re-scaling on zoom */
-.svg-layer svg {
-  width: 100%;
-  height: 100%;
-  display: block;
-  shape-rendering: geometricPrecision;
-  text-rendering: geometricPrecision;
 }
 
 #app-container {
@@ -49,15 +29,16 @@ html {
   position: relative;
 }
 
-/* Left Sidebar Menu & Slide Toggle */
+/* MOBILE-FIRST SIDEBAR MENU (<768px) */
 #left-menu {
-  width: 320px;
+  width: 100vw;
   height: 100%;
   background: #242424;
-  border-right: 1px solid #333;
+  border-right: none;
   display: flex;
   flex-direction: column;
   padding: 1rem;
+  padding-bottom: calc(1rem + env(safe-area-inset-bottom));
   z-index: 1000;
   box-shadow: 2px 0 10px rgba(0, 0, 0, 0.5);
   position: absolute;
@@ -71,28 +52,39 @@ html {
   transform: translateX(0);
 }
 
-/* Toggle Floating Button */
+/* BOTTOM SIDEBAR TOGGLE BUTTON 🔻 */
 #sidebar-toggle {
   position: absolute;
-  top: 12px;
-  right: -42px;
-  width: 42px;
-  height: 42px;
+  bottom: calc(1rem + env(safe-area-inset-bottom));
+  right: 1rem;
+  width: 48px;
+  height: 48px;
   background: #242424;
-  border: 1px solid #333;
-  border-left: none;
-  border-radius: 0 8px 8px 0;
+  border: 1px solid #444;
+  border-radius: 50%;
   color: #4da6ff;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   z-index: 1001;
-  box-shadow: 4px 0 8px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+}
+
+/* When closed on mobile: keep absolute (not fixed) so the button
+   escapes the transformed parent and appears at the left edge of the screen.
+   A parent with transform makes position:fixed resolve relative to that parent,
+   which is why the toggle was invisible when the menu was closed. */
+#left-menu:not(.open) #sidebar-toggle {
+  position: absolute;
+  left: 100%;
+  right: auto;
+  bottom: calc(1rem + env(safe-area-inset-bottom));
+  margin-left: 0.5rem; /* small gap from the screen edge */
 }
 
 .toggle-icon {
-  font-size: 0.8rem;
+  font-size: 1rem;
   transition: transform 0.3s ease;
 }
 
@@ -110,7 +102,7 @@ html {
   color: #4da6ff;
 }
 
-/* Toolbar & Search Controls */
+/* Toolbar & Inputs */
 .toolbar-container {
   display: flex;
   flex-direction: column;
@@ -132,20 +124,20 @@ html {
   display: flex;
   align-items: center;
   gap: 0.4rem;
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   color: #aaa;
   cursor: pointer;
-  padding: 0.2rem;
+  padding: 0.4rem;
 }
 
 #search-input {
   width: 100%;
-  padding: 0.5rem 0.6rem;
+  padding: 0.6rem;
   background: #2a2a2a;
   border: 1px solid #444;
-  border-radius: 4px;
+  border-radius: 6px;
   color: #fff;
-  font-size: 0.85rem;
+  font-size: 16px;
   outline: none;
 }
 
@@ -153,7 +145,7 @@ html {
   border-color: #4da6ff;
 }
 
-/* Accordion & Tree UI */
+/* Accordion & Tree Components */
 .accordion-root {
   flex: 1;
   overflow-y: auto;
@@ -168,21 +160,22 @@ html {
   align-items: center;
   justify-content: space-between;
   background: #2d2d2d;
-  padding: 0.6rem;
-  border-radius: 4px;
+  padding: 0.75rem 0.6rem;
+  border-radius: 6px;
   cursor: pointer;
-  margin-bottom: 0.2rem;
+  margin-bottom: 0.25rem;
+  min-height: 44px;
 }
 
 .accordion-title-group {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  font-size: 0.85rem;
+  font-size: 0.9rem;
 }
 
 .chevron {
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   transition: transform 0.2s ease;
   color: #888;
 }
@@ -204,9 +197,16 @@ html {
 .tree-label {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  font-size: 0.85rem;
-  padding: 0.4rem 0; /* Expanded touch target for mobile */
+  gap: 0.6rem;
+  font-size: 0.9rem;
+  padding: 0.5rem 0;
+  min-height: 44px;
+}
+
+.tree-label input[type="checkbox"],
+.toolbar-checkbox-label input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
 }
 
 /* Search Results Panel */
@@ -220,13 +220,13 @@ html {
 
 .search-item {
   background: #2a2a2a;
-  padding: 0.55rem;
-  border-radius: 4px;
+  padding: 0.65rem;
+  border-radius: 6px;
   border-left: 3px solid #4da6ff;
 }
 
 .search-path {
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   color: #888;
   margin-bottom: 0.25rem;
   word-break: break-word;
@@ -236,10 +236,10 @@ html {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  font-size: 0.85rem;
+  font-size: 0.9rem;
 }
 
-/* Viewport Engine Canvas */
+/* Viewport Canvas */
 #viewport-container {
   width: 100%;
   height: 100%;
@@ -272,44 +272,43 @@ html {
   display: none;
 }
 
-.svg-layer img {
+.svg-layer svg {
   width: 100%;
   height: 100%;
   display: block;
+  shape-rendering: geometricPrecision;
+  text-rendering: geometricPrecision;
 }
 
-/* ==========================================================================
-   MOBILE OPTIMIZATIONS (<768px)
-   ========================================================================== */
-@media (max-width: 767px) {
+/* DESKTOP ADAPTATIONS (>=768px) */
+@media (min-width: 768px) {
   #left-menu {
-    width: 100vw; /* Take full viewport width when opened on mobile */
-    max-width: 100vw;
-    border-right: none;
+    width: 320px;
+    border-right: 1px solid #333;
+    padding-bottom: 1rem;
   }
 
   #sidebar-toggle {
-    right: 12px; /* Position toggle inside top bar area when full screen */
-    top: 12px;
-    /* bottom: 12px; */
-    border-radius: 6px;
-    border: 1px solid #444;
+    position: absolute;
+    bottom: 1.5rem;
+    right: -42px;
+    width: 42px;
+    height: 42px;
+    border-radius: 0 8px 8px 0;
+    border-left: none;
+    box-shadow: 4px 0 8px rgba(0, 0, 0, 0.3);
   }
 
   #left-menu:not(.open) #sidebar-toggle {
-    right: -48px; /* Offset outside canvas when collapsed */
-    top: 12px;
-    /* bottom: 12px; */
-  }
-
-  /* Optimize padding & input scale to prevent mobile zoom glitches */
-  #search-input {
-    font-size: 16px; /* Prevents auto-zoom on iOS Safari */
+    position: absolute;
+    left: 320px;
+    bottom: 1.5rem;
+    margin-left: 0;
   }
 
   .tree-label input[type="checkbox"],
   .toolbar-checkbox-label input[type="checkbox"] {
-    width: 18px;
-    height: 18px;
+    width: 16px;
+    height: 16px;
   }
 }

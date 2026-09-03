@@ -2,9 +2,13 @@
 
 export const DRAW_CONFIG = {
   scale: {
-    // Defines how many SVG coordinate units represent 1 meter.
-    // Adjust this value so 6m matches your blueprint's 6m room length.
-    svgUnitsPerMeter: 75.590551 / 4, // 1 meter = 18.897637 SVG units
+    // Number of SVG *user* units (viewBox units) that equal 1 real meter.
+    // Measurements now use the blueprint SVG coordinate system, so this value
+    // is independent of screen size, device, zoom and aspect ratio.
+    // After the coordinate-system fix you may need to re-calibrate:
+    // measure a known length (e.g. a 2 m or 6 m wall) and adjust until the
+    // readout matches reality. Once correct it will stay correct on every device.
+    svgUnitsPerMeter: 75.590551, // ≈ 18.897637 SVG units per meter
   },
   style: {
     lineColor: "#09ff00",

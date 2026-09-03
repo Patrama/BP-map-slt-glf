@@ -13,6 +13,7 @@ export class MeasurementTool {
     this.measureStartPoint = null;
     this.measureEndPoint = null;
     this.isSnapEnabled = DRAW_CONFIG.snap.defaultEnabled;
+    this.referenceSVG = null; // used for consistent SVG-user-space coordinates
 
     this.initDOM();
     this.initSVGOverlay();
@@ -36,12 +37,16 @@ export class MeasurementTool {
     `;
     document.body.appendChild(this.controlContainer);
 
-    // Readout box in top-left
+    // Readout box in top-left with stacked values
     this.displayBox = document.createElement("div");
     this.displayBox.id = "measure-display-box";
     this.displayBox.innerHTML = `
       <div class="measure-title">MEASUREMENT</div>
-      <div id="measure-values">0.00 M | 0.00 CM | 0 MM</div>
+      <div id="measure-values">
+        <span class="measure-row"><strong>0.00</strong> M</span>
+        <span class="measure-row"><strong>0.0</strong> CM</span>
+        <span class="measure-row"><strong>0</strong> MM</span>
+      </div>
     `;
     document.body.appendChild(this.displayBox);
 
@@ -61,6 +66,8 @@ export class MeasurementTool {
     this.line.setAttribute("stroke", DRAW_CONFIG.style.lineColor);
     this.line.setAttribute("stroke-width", DRAW_CONFIG.style.lineWidth);
     this.line.setAttribute("stroke-dasharray", DRAW_CONFIG.style.lineDashArray);
+    // Keep visual thickness constant regardless of viewBox scale / zoom
+    this.line.setAttribute("vector-effect", "non-scaling-stroke");
 
     this.startHandle = document.createElementNS(
       "http://www.w3.org/2000/svg",
@@ -68,6 +75,7 @@ export class MeasurementTool {
     );
     this.startHandle.setAttribute("r", DRAW_CONFIG.style.handleRadius);
     this.startHandle.setAttribute("fill", DRAW_CONFIG.style.handleColor);
+    this.startHandle.setAttribute("vector-effect", "non-scaling-stroke");
     this.startHandle.style.display = "none";
 
     this.endHandle = document.createElementNS(
@@ -76,12 +84,40 @@ export class MeasurementTool {
     );
     this.endHandle.setAttribute("r", DRAW_CONFIG.style.handleRadius);
     this.endHandle.setAttribute("fill", DRAW_CONFIG.style.handleColor);
+    this.endHandle.setAttribute("vector-effect", "non-scaling-stroke");
     this.endHandle.style.display = "none";
 
     this.svgOverlay.appendChild(this.line);
     this.svgOverlay.appendChild(this.startHandle);
     this.svgOverlay.appendChild(this.endHandle);
     this.stage.appendChild(this.svgOverlay);
+  }
+
+  /**
+   * Sync the measurement overlay to the same coordinate system as the
+   * blueprint SVGs. This makes measured distances independent of viewport
+   * size, device, zoom, and aspect-ratio changes.
+   */
+  syncCoordinateSystem() {
+    if (this.referenceSVG) return;
+
+    const svg = this.stage.querySelector(".svg-layer svg");
+    if (!svg) return;
+
+    this.referenceSVG = svg;
+
+    // Prefer the explicit viewBox when present (design units)
+    if (svg.viewBox && svg.viewBox.baseVal && svg.viewBox.baseVal.width > 0) {
+      const vb = svg.viewBox.baseVal;
+      this.svgOverlay.setAttribute(
+        "viewBox",
+        `${vb.x} ${vb.y} ${vb.width} ${vb.height}`,
+      );
+      const par = svg.getAttribute("preserveAspectRatio");
+      if (par) {
+        this.svgOverlay.setAttribute("preserveAspectRatio", par);
+      }
+    }
   }
 
   bindEvents() {
@@ -110,6 +146,26 @@ export class MeasurementTool {
     this.viewport.addEventListener("mousemove", (e) =>
       this.handleCanvasMouseMove(e),
     );
+
+    // Touch support for measurement (pan/zoom is already blocked while measuring)
+    this.viewport.addEventListener(
+      "touchstart",
+      (e) => {
+        if (!this.appState.isMeasuring || e.touches.length !== 1) return;
+        e.preventDefault();
+        this.handleCanvasClick(e.touches[0]);
+      },
+      { passive: false },
+    );
+    this.viewport.addEventListener(
+      "touchmove",
+      (e) => {
+        if (!this.appState.isMeasuring || e.touches.length !== 1) return;
+        e.preventDefault();
+        this.handleCanvasMouseMove(e.touches[0]);
+      },
+      { passive: false },
+    );
   }
 
   updateMenuAndMeasurementStates() {
@@ -127,6 +183,7 @@ export class MeasurementTool {
     this.appState.isMeasuring = true;
     this.viewport.style.cursor = "crosshair";
     this.displayBox.style.display = "block";
+    this.syncCoordinateSystem(); // ensure viewBox is ready before first click
     this.clearLine();
   }
 
@@ -146,10 +203,30 @@ export class MeasurementTool {
     this.line.setAttribute("y2", "0");
     this.startHandle.style.display = "none";
     this.endHandle.style.display = "none";
-    this.measureValues.textContent = "0.00 M | 0.00 CM | 0 MM";
+    this.measureValues.innerHTML = `
+      <span class="measure-row"><strong>0.00</strong> M</span>
+      <span class="measure-row"><strong>0.0</strong> CM</span>
+      <span class="measure-row"><strong>0</strong> MM</span>
+    `;
   }
 
   getStageCoordinates(e) {
+    this.syncCoordinateSystem();
+
+    // Prefer mapping through the SVG user coordinate system so measurements
+    // stay consistent across desktop, mobile, window resizes and zoom levels.
+    if (this.referenceSVG && this.svgOverlay.getScreenCTM) {
+      const ctm = this.svgOverlay.getScreenCTM();
+      if (ctm) {
+        const pt = this.svgOverlay.createSVGPoint();
+        pt.x = e.clientX;
+        pt.y = e.clientY;
+        const svgPt = pt.matrixTransform(ctm.inverse());
+        return { x: svgPt.x, y: svgPt.y };
+      }
+    }
+
+    // Fallback (should only happen before any SVG has loaded)
     const rect = this.stage.getBoundingClientRect();
     return {
       x: (e.clientX - rect.left) / this.appState.zoom,
@@ -157,31 +234,24 @@ export class MeasurementTool {
     };
   }
 
-  // Applies Orthogonal snapping (Horizontal / Vertical)
   applySnapPoint(start, current) {
     if (!this.isSnapEnabled || !start) return current;
 
     const dx = Math.abs(current.x - start.x);
     const dy = Math.abs(current.y - start.y);
 
-    // If horizontal distance is greater than vertical, snap to horizontal line
     if (dx > dy) {
       return { x: current.x, y: start.y };
     } else {
-      // Otherwise snap to vertical line
       return { x: start.x, y: current.y };
     }
   }
 
-  /**
-   * Calculates length units based on normalized SVG vector distance
-   */
   calculateUnits(p1, p2) {
     const dx = p2.x - p1.x;
     const dy = p2.y - p1.y;
     const svgCoordinateDistance = Math.sqrt(dx * dx + dy * dy);
 
-    // Divide raw coordinate distance by configured units-per-meter
     const meters = svgCoordinateDistance / DRAW_CONFIG.scale.svgUnitsPerMeter;
     const centimeters = meters * 100;
     const millimeters = meters * 1000;
@@ -199,7 +269,6 @@ export class MeasurementTool {
     let point = this.getStageCoordinates(e);
 
     if (!this.measureStartPoint || this.measureEndPoint) {
-      // Start a new vector line
       this.measureStartPoint = point;
       this.measureEndPoint = null;
 
@@ -218,7 +287,6 @@ export class MeasurementTool {
 
       this.updateReadout(point, point);
     } else {
-      // Apply snap to end point on lock
       point = this.applySnapPoint(this.measureStartPoint, point);
       this.measureEndPoint = point;
 
@@ -252,6 +320,10 @@ export class MeasurementTool {
 
   updateReadout(p1, p2) {
     const units = this.calculateUnits(p1, p2);
-    this.measureValues.textContent = `${units.m} M | ${units.cm} CM | ${units.mm} MM`;
+    this.measureValues.innerHTML = `
+      <span class="measure-row"><strong>${units.m}</strong> M</span>
+      <span class="measure-row"><strong>${units.cm}</strong> CM</span>
+      <span class="measure-row"><strong>${units.mm}</strong> MM</span>
+    `;
   }
 }
