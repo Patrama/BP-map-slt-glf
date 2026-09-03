@@ -69,6 +69,8 @@
 }
 
 #measure-values {
+  letter-spacing: 1.5px;
+
   display: flex;
   flex-direction: column;
   gap: 0.2rem;
