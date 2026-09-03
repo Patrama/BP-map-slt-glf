@@ -2,11 +2,12 @@
 
 import { CONFIG_1ST_FLOOR, STRUCTURE_1ST_FLOOR } from "./f1_CONFIG.js";
 import { CONFIG_2ND_FLOOR, STRUCTURE_2ND_FLOOR } from "./f2_CONFIG.js";
+import { MeasurementTool } from "./line-draw/measurement.js";
 
 // Combine structural data for all floors
 const FLOORS_DATA = [STRUCTURE_1ST_FLOOR, STRUCTURE_2ND_FLOOR];
 
-// Since configs are identical, standardizing to a single configuration source works cleanly
+// Standardize configuration parameters
 const DEFAULT_Z_MAP = CONFIG_2ND_FLOOR.zPriorityMap;
 const ZOOM_CONFIG = CONFIG_2ND_FLOOR.zoom;
 
@@ -21,6 +22,7 @@ const state = {
   savedCheckedStates: JSON.parse(
     localStorage.getItem("blueprint_layers") || "{}",
   ),
+  isMeasuring: false, // 🛠️ Added flag to prevent panning/zooming while drawing
 };
 
 const stage = document.getElementById("svg-stage");
@@ -35,11 +37,26 @@ const searchResultsContainer = document.getElementById(
 const toggleAllCb = document.getElementById("toggle-all-cb");
 const toggleResultsCb = document.getElementById("toggle-results-cb");
 
+// 📐 Initialize measurement module & pass app reference state
+const measurementTool = new MeasurementTool(
+  viewport,
+  stage,
+  leftMenu,
+  sidebarToggle,
+  state,
+);
+
 // Handle sidebar toggling cleanly
 sidebarToggle.addEventListener("click", (e) => {
+  if (state.isMeasuring) {
+    e.stopPropagation();
+    alert("Please uncheck 'Measurement' mode before opening the menu. ⚠️");
+    return;
+  }
   e.stopPropagation();
   leftMenu.classList.toggle("open");
   localStorage.setItem("sidebar_open", leftMenu.classList.contains("open"));
+  measurementTool.updateMenuAndMeasurementStates();
 });
 
 // Restore saved sidebar state on load
@@ -295,9 +312,11 @@ function getTouchDistance(touches) {
   return Math.sqrt(dx * dx + dy * dy);
 }
 
+// 🛑 Block touch panning/zooming if measuring
 viewport.addEventListener(
   "touchstart",
   (e) => {
+    if (state.isMeasuring) return;
     if (e.touches.length === 1) {
       state.isDragging = true;
       state.startX = e.touches[0].clientX - state.panX;
@@ -314,6 +333,7 @@ viewport.addEventListener(
 viewport.addEventListener(
   "touchmove",
   (e) => {
+    if (state.isMeasuring) return;
     e.preventDefault();
     if (e.touches.length === 1 && state.isDragging) {
       state.panX = e.touches[0].clientX - state.startX;
@@ -346,6 +366,7 @@ viewport.addEventListener(
 );
 
 viewport.addEventListener("touchend", (e) => {
+  if (state.isMeasuring) return;
   if (e.touches.length < 2) initialPinchDistance = null;
   if (e.touches.length === 0) state.isDragging = false;
 });
@@ -354,9 +375,11 @@ function updateTransform() {
   stage.style.transform = `translate(${state.panX}px, ${state.panY}px) scale(${state.zoom})`;
 }
 
+// 🛑 Block wheel zooming if measuring
 viewport.addEventListener(
   "wheel",
   (e) => {
+    if (state.isMeasuring) return;
     e.preventDefault();
     const zoomFactor = 1 - e.deltaY * ZOOM_CONFIG.sensitivity;
     const newZoom = Math.min(
@@ -377,20 +400,23 @@ viewport.addEventListener(
   { passive: false },
 );
 
+// 🛑 Block mouse dragging if measuring
 viewport.addEventListener("mousedown", (e) => {
+  if (state.isMeasuring) return;
   state.isDragging = true;
   state.startX = e.clientX - state.panX;
   state.startY = e.clientY - state.panY;
 });
 
 window.addEventListener("mousemove", (e) => {
-  if (!state.isDragging) return;
+  if (state.isMeasuring || !state.isDragging) return;
   state.panX = e.clientX - state.startX;
   state.panY = e.clientY - state.startY;
   updateTransform();
 });
 
 window.addEventListener("mouseup", () => {
+  if (state.isMeasuring) return;
   state.isDragging = false;
 });
 
