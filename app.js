@@ -10,10 +10,19 @@ import {
   STRUCTURE_2ND_FLOOR,
 } from "./floor-config/f2_CONFIG.js";
 
+import {
+  CONFIG_3RD_FLOOR,
+  STRUCTURE_3RD_FLOOR,
+} from "./floor-config/f3_CONFIG.js";
+
 import { MeasurementTool } from "./line-draw/measurement.js";
 
 // Combine structural data for all floors
-const FLOORS_DATA = [STRUCTURE_1ST_FLOOR, STRUCTURE_2ND_FLOOR];
+const FLOORS_DATA = [
+  STRUCTURE_1ST_FLOOR,
+  STRUCTURE_2ND_FLOOR,
+  STRUCTURE_3RD_FLOOR,
+];
 
 // Standardize configuration parameters
 const DEFAULT_Z_MAP = CONFIG_2ND_FLOOR.zPriorityMap;
