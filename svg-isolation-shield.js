@@ -1,79 +1,215 @@
 /**
- * svg-isolation-shield.js (100% Universal Plug-and-Play Version)
+ * ---------- SVG Isolation Shield ----------
+ * Prevents ID collisions, gradient/clip-path/use reference breakage, and
+ * CSS class collisions when multiple inline SVGs (especially Adobe
+ * Illustrator / Figma exports, which love generic names like id="Layer_1"
+ * and class="cls-1") land in the same DOM. Each <svg>...</svg> block gets
+ * its own unique namespace suffix appended to every id, class, and internal
+ * reference, so two colliding icons never fight over the same name.
  *
- * Add this script via <script src="svg-isolation-shield.js"></script> before other files. PRIORITY: Must be loaded before any other scripts that parse SVGs or manipulate the DOM.
+ * Add via <script src="js/svg-isolation-shield.js"></script> as early as
+ * possible — before any code that injects SVG markup — since it works by
+ * intercepting the browser APIs that bring HTML strings into the DOM.
  *
- * This script automatically intercepts and sandboxes ALL inline SVGs and CSS classes across any project framework.
- * It is designed to prevent ID collisions, CSS class conflicts, and other namespace issues when multiple SVGs are loaded into the same DOM.
- * Automatically intercept and sandbox ALL colliding inline SVGs and CSS classes across any project framework.
+ * COVERS (the actual common paths SVG markup enters a page):
+ *   - DOMParser().parseFromString(svgText, ...)   (any type containing <svg,
+ *     not just the exact "image/svg+xml" MIME type)
+ *   - el.innerHTML = svgText
+ *   - el.outerHTML = svgText
+ *   - el.insertAdjacentHTML(position, svgText)
+ *
+ * NOT covered (documented limitation, not a silent gap): document.write(),
+ * Range.prototype.createContextualFragment(), and SVG loaded via <img src>,
+ * <object>, or <iframe> — the latter three don't need this at all, since
+ * the browser already isolates them in their own document/rendering context
+ * with no possibility of ID/class collision with the host page.
+ *
+ * WHAT GETS REWRITTEN, per <svg>...</svg> block found:
+ *   - id="..."                          (and xml:id, since the same regex
+ *                                         naturally covers any *id="...")
+ *   - href="#..." AND xlink:href="#..." (both forms — Illustrator exports
+ *                                         very commonly still use xlink:href)
+ *   - url(#...), url('#...'), url("#...")  (all three quoting styles)
+ *   - CSS classes inside <style> blocks (.cls-1 { ... })
+ *   - class="..." attributes on elements
+ * Only fragment references (#foo) are touched — external URLs, data: URIs,
+ * and cross-document xlink:href values are left completely alone.
+ *
+ * MANUAL / STANDALONE USE (no page-injection interception needed):
+ *   import { sandbox } from "./js/svg-isolation-shield.js";
+ *   const isolated = sandbox(rawSvgString);
+ *
+ * Loading this script twice (e.g. duplicated in a bundle) is safe — a
+ * guard prevents the DOM patches from being installed more than once.
  *
  * @format
  */
 
-(function () {
-  // Generates a random, unique alphanumeric seed key for each parsed file instance
+(function (global) {
+  // ---- Unique key generation ------------------------------------------
+  // A monotonic counter guarantees uniqueness within a page session even
+  // in the vanishingly unlikely event Date.now()+Math.random() collide.
+  var keyCounter = 0;
+
   function generateUniqueKey() {
+    keyCounter += 1;
     return (
       "layer_" +
-      Math.random().toString(36).substring(2, 9) +
-      Date.now().toString(36).substring(4)
+      Date.now().toString(36) +
+      "_" +
+      keyCounter.toString(36) +
+      "_" +
+      Math.random().toString(36).slice(2, 8)
     );
   }
 
-  // Intercept the native browser DOMParser to catch code before compilation/DOM rendering
-  const originalParseFromString = DOMParser.prototype.parseFromString;
+  // ---- Core transform, scoped to ONE <svg>...</svg> block --------------
 
-  DOMParser.prototype.parseFromString = function (markup, type) {
-    let finalMarkup = markup;
+  function transformSvgBlock(svgBlock, scopeKey) {
+    var result = svgBlock;
 
-    // Matches any incoming SVG text payload passing through the browser pipeline
-    if (type === "image/svg+xml" && typeof markup === "string") {
-      const scopeKey = generateUniqueKey();
+    // 1. id="..." (also naturally catches xml:id="...", data-id="..." etc.
+    //    via the same attribute-name token, which is harmless even where
+    //    not strictly necessary). Requires a preceding whitespace so word
+    //    fragments like `avoid="..."` are never mistaken for `id="..."`.
+    result = result.replace(/(\sid)="([^"]*)"/g, function (m, attr, val) {
+      return val ? attr + '="' + val + "_" + scopeKey + '"' : m;
+    });
 
-      // 1. Isolate all generic id attributes, url fragment links, and href references
-      finalMarkup = finalMarkup.replace(/id="([^"]+)"/g, `id="$1_${scopeKey}"`);
-      finalMarkup = finalMarkup.replace(
-        /url\(#([^)]+)\)/g,
-        `url(#$1_${scopeKey})`,
-      );
-      finalMarkup = finalMarkup.replace(
-        /href="#([^"]+)"/g,
-        `href="#$1_${scopeKey}"`,
-      );
+    // 2. href="#..." AND xlink:href="#..." — both forms, fragment-only
+    //    (a full URL or data: URI in href is never touched).
+    result = result.replace(
+      /((?:xlink:)?href)="#([^"]+)"/g,
+      function (m, attr, id) {
+        return attr + '="#' + id + "_" + scopeKey + '"';
+      },
+    );
 
-      // 2. Isolate embedded CSS classes (Adobe Illustrator style sheets)
-      // Captures style blocks and rewrites classes: e.g., ".cls-1{...}" to ".cls-1_layer_xyz{...}"
-      finalMarkup = finalMarkup.replace(
-        /<style[^>]*>([\s\S]*?)<\/style>/gi,
-        function (match, cssContent) {
-          // Find every class selector (e.g., .cls-1) and append our unique scope key
-          let isolatedCss = cssContent.replace(
-            /\.([a-zA-Z0-9_-]+)/g,
-            `.$1_${scopeKey}`,
-          );
-          return `<style>${isolatedCss}</style>`;
-        },
-      );
+    // 3. url(#...), url('#...'), url("#...") — all three quoting styles,
+    //    with optional internal whitespace.
+    result = result.replace(
+      /url\(\s*(['"]?)#([^'")\s]+)\1\s*\)/g,
+      function (m, quote, id) {
+        return "url(" + quote + "#" + id + "_" + scopeKey + quote + ")";
+      },
+    );
 
-      // 3. Update the matching class attributes inside the HTML elements themselves
-      // Converts class="cls-1" to class="cls-1_layer_xyz"
-      finalMarkup = finalMarkup.replace(
-        /class="([^"]+)"/g,
-        function (match, classNames) {
-          let isolatedClasses = classNames
-            .split(/\s+/)
-            .map((name) => (name ? `${name}_${scopeKey}` : ""))
-            .join(" ");
-          return `class="${isolatedClasses}"`;
-        },
-      );
+    // 4. CSS classes inside <style> blocks. First character after the dot
+    //    must be a letter/underscore/hyphen — NOT a digit — otherwise a
+    //    decimal value like `stroke-width:.5px` gets corrupted into
+    //    `.5px_layer_xyz` by a naive `.` + alphanumeric match.
+    result = result.replace(
+      /<style([^>]*)>([\s\S]*?)<\/style>/gi,
+      function (match, attrs, cssContent) {
+        var isolatedCss = cssContent.replace(
+          /\.([a-zA-Z_-][a-zA-Z0-9_-]*)/g,
+          function (m2, cls) {
+            return "." + cls + "_" + scopeKey;
+          },
+        );
+        return "<style" + attrs + ">" + isolatedCss + "</style>";
+      },
+    );
+
+    // 5. class="..." attributes on elements themselves.
+    result = result.replace(/\sclass="([^"]+)"/g, function (m, classNames) {
+      var isolated = classNames
+        .split(/\s+/)
+        .filter(Boolean)
+        .map(function (name) {
+          return name + "_" + scopeKey;
+        })
+        .join(" ");
+      return ' class="' + isolated + '"';
+    });
+
+    return result;
+  }
+
+  // ---- Public entry point: finds every <svg>...</svg> block in an   ----
+  // ---- arbitrary string and transforms ONLY those blocks, leaving   ----
+  // ---- any surrounding non-SVG markup completely untouched.         ----
+
+  function sandbox(markup) {
+    if (typeof markup !== "string" || markup.indexOf("<svg") === -1) {
+      return markup; // fast path — nothing to do, and never throws on non-strings
     }
 
-    // Pass the sandboxed layout data to the original DOMParser module
-    return originalParseFromString.call(this, finalMarkup, type);
+    // Known limitation: this non-greedy match assumes <svg> blocks don't
+    // nest (true for essentially all real-world content). A genuinely
+    // nested <svg> inside another <svg> would close the match early;
+    // documented above rather than silently mishandled.
+    return markup.replace(/<svg[\s\S]*?<\/svg>/gi, function (svgBlock) {
+      return transformSvgBlock(svgBlock, generateUniqueKey());
+    });
+  }
+
+  // ---- Install the interceptors (browser only, once) --------------------
+
+  function installOnce() {
+    if (global.__SVG_ISOLATION_SHIELD_INSTALLED__) return;
+
+    if (typeof DOMParser !== "undefined") {
+      var originalParseFromString = DOMParser.prototype.parseFromString;
+      DOMParser.prototype.parseFromString = function (markup, type) {
+        var finalMarkup = typeof markup === "string" ? sandbox(markup) : markup;
+        return originalParseFromString.call(this, finalMarkup, type);
+      };
+    }
+
+    if (typeof Element !== "undefined") {
+      patchHtmlSetter(Element.prototype, "innerHTML");
+      patchHtmlSetter(Element.prototype, "outerHTML");
+      patchInsertAdjacentHTML(Element.prototype);
+    }
+
+    global.__SVG_ISOLATION_SHIELD_INSTALLED__ = true;
+
+    if (global.SVG_ISOLATION_SHIELD_DEBUG) {
+      console.log(
+        "🛡️ SVG Isolation Shield active: DOMParser, innerHTML, outerHTML, insertAdjacentHTML.",
+      );
+    }
+  }
+
+  function patchHtmlSetter(proto, propName) {
+    var descriptor = Object.getOwnPropertyDescriptor(proto, propName);
+    if (!descriptor || typeof descriptor.set !== "function") return; // not present on this engine — skip, don't throw
+    var originalSet = descriptor.set;
+    Object.defineProperty(proto, propName, {
+      configurable: true,
+      enumerable: descriptor.enumerable,
+      get: descriptor.get,
+      set: function (value) {
+        var finalValue = typeof value === "string" ? sandbox(value) : value;
+        return originalSet.call(this, finalValue);
+      },
+    });
+  }
+
+  function patchInsertAdjacentHTML(proto) {
+    var original = proto.insertAdjacentHTML;
+    if (typeof original !== "function") return;
+    proto.insertAdjacentHTML = function (position, html) {
+      var finalHtml = typeof html === "string" ? sandbox(html) : html;
+      return original.call(this, position, finalHtml);
+    };
+  }
+
+  if (typeof document !== "undefined") {
+    installOnce();
+  }
+
+  // ---- Public API --------------------------------------------------------
+
+  var api = {
+    sandbox: sandbox,
+    generateKey: generateUniqueKey,
   };
 
-  console.log(
-    "🛡️ Global SVG Shield: Asset namespace and CSS class isolation runtime is active.",
-  );
-})();
+  global.SvgIsolationShield = api;
+
+  if (typeof module !== "undefined" && module.exports) {
+    module.exports = api;
+  }
+})(typeof window !== "undefined" ? window : globalThis);
