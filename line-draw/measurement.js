@@ -173,14 +173,16 @@ export class MeasurementTool {
     }
   }
 
+  /**
+   * Calculates length units based on normalized SVG vector distance
+   */
   calculateUnits(p1, p2) {
     const dx = p2.x - p1.x;
     const dy = p2.y - p1.y;
-    const pixelDistance = Math.sqrt(dx * dx + dy * dy);
+    const svgCoordinateDistance = Math.sqrt(dx * dx + dy * dy);
 
-    const pxPerMeter =
-      (DRAW_CONFIG.scale.dpi / 2.54) * DRAW_CONFIG.scale.cmPerMeterRatio;
-    const meters = pixelDistance / pxPerMeter;
+    // Divide raw coordinate distance by configured units-per-meter
+    const meters = svgCoordinateDistance / DRAW_CONFIG.scale.svgUnitsPerMeter;
     const centimeters = meters * 100;
     const millimeters = meters * 1000;
 

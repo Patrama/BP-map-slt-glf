@@ -2,8 +2,9 @@
 
 export const DRAW_CONFIG = {
   scale: {
-    dpi: 96,
-    cmPerMeterRatio: 0.5, // 2cm at 96dpi = 1m (75.590551 px/m)
+    // Defines how many SVG coordinate units represent 1 meter.
+    // Adjust this value so 6m matches your blueprint's 6m room length.
+    svgUnitsPerMeter: 75.590551 / 4, // 1 meter = 18.897637 SVG units
   },
   style: {
     lineColor: "#09ff00",

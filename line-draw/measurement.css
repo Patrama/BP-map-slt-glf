@@ -73,7 +73,7 @@
   position: fixed;
   top: 1rem;
   right: 1rem;
-  z-index: 1000;
+  z-index: 990;
   background: rgba(0, 0, 0, 0.85);
   color: #ffffff;
   padding: 0.5rem 0.8rem;
