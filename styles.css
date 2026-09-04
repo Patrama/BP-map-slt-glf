@@ -52,11 +52,11 @@ html {
   transform: translateX(0);
 }
 
-/* BOTTOM SIDEBAR TOGGLE BUTTON 🔻 */
+/* MOBILE-FIRST SIDEBAR TOGGLE BUTTON 🔻 */
 #sidebar-toggle {
-  position: absolute;
-  /* bottom: calc(1rem + env(safe-area-inset-bottom)); */
-  top: calc(2rem + env(safe-area-inset-bottom));
+  position: fixed !important;
+  top: 50dvh !important;
+  transform: translateY(-50%) !important;
   right: 1rem;
   width: 48px;
   height: 48px;
@@ -72,17 +72,17 @@ html {
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
 }
 
-/* When closed on mobile: keep absolute (not fixed) so the button
-   escapes the transformed parent and appears at the left edge of the screen.
-   A parent with transform makes position:fixed resolve relative to that parent,
-   which is why the toggle was invisible when the menu was closed. */
+/* When closed on mobile */
 #left-menu:not(.open) #sidebar-toggle {
-  position: absolute;
-  left: 100%;
-  right: auto;
-  /* bottom: calc(1rem + env(safe-area-inset-bottom)); */
-  top: calc(2rem + env(safe-area-inset-bottom));
-  margin-left: 0.5rem; /* small gap from the screen edge */
+  position: fixed !important;
+  left: 0.5rem !important;
+  right: auto !important;
+  top: 50dvh !important;
+  transform: translateY(-50%) !important;
+}
+
+#left-menu.open #sidebar-toggle {
+  left: calc(100vw - 3.5rem) !important;
 }
 
 .toggle-icon {
@@ -291,10 +291,11 @@ html {
   }
 
   #sidebar-toggle {
-    position: absolute;
-    /* bottom: 1.5rem; */
-    top: 2rem;
-    right: -42px;
+    position: absolute !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    right: -42px !important;
+    left: auto !important;
     width: 42px;
     height: 42px;
     border-radius: 0 8px 8px 0;
@@ -303,10 +304,11 @@ html {
   }
 
   #left-menu:not(.open) #sidebar-toggle {
-    position: absolute;
-    left: 320px;
-    /* bottom: 1.5rem; */
-    top: 2rem;
+    position: absolute !important;
+    left: 320px !important;
+    right: auto !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
     margin-left: 0;
   }
 

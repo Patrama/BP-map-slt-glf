@@ -12,14 +12,23 @@ export const DRAW_CONFIG = {
   },
   style: {
     lineColor: "#09ff00",
-    lineWidth: 2,
+    lineWidth: 0.5, // 🎯 Reduced from 1 to 0.5 for finer lines
     lineDashArray: "4 4",
-    handleRadius: 2,
-    handleColor: "#00e5ff",
-    cursorColor: "#ff0055", // 🎯 Color for the + pointer cursor
-    cursorSize: 12, // 🎯 Arm length of the crosshair
+
+    handleColor: "#ff0055",
+    handleRadius: 1.5, // 🎯 Reduced from 3 to 1.5 for finer control
+
+    cursorColor: "#ff0055",
+    cursorSize: 8, // 🎯 Reduced from 12 to 8 for sharper precision
+    cursorStrokeWidth: 1, // 🎯 Fine 1px stroke weight
+
+    cursorDotColor: "#ffff00", // 🎨 Separate bright color for the center dot
+    cursorDotRadius: 1.5, // 🎯 Adjustable center dot radius
   },
   snap: {
     defaultEnabled: true, // Snap enabled by default 🧲
+  },
+  cursor: {
+    defaultEnabled: true, // 🎯 Enable simulated cursor by default
   },
 };
