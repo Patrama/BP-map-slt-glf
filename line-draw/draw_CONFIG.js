@@ -34,4 +34,11 @@ export const DRAW_CONFIG = {
   cursor: {
     defaultEnabled: true,
   },
+
+  magnifier: {
+    defaultEnabled: true,
+    zoomLevel: 2, // 🔍 Magnifier zoom scale
+    size: 110, // 🔍 Viewport size in pixels
+    style: "smooth-square", // 🔍 Shape: "circle" or "smooth-square"
+  },
 };

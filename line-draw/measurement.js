@@ -18,8 +18,9 @@ export class MeasurementTool {
     this.cursorStartPos = null;
 
     this.isSnapEnabled = false;
-    this.dimensionMode = true; // Default to true per requirements
+    this.dimensionMode = true;
     this.isSimulateCursorEnabled = DRAW_CONFIG.cursor?.defaultEnabled ?? true;
+    this.isMagnifierEnabled = DRAW_CONFIG.magnifier?.defaultEnabled ?? true;
     this.referenceSVG = null;
 
     this.initDOM();
@@ -30,8 +31,6 @@ export class MeasurementTool {
   }
 
   applyPaletteColors() {
-    // Override CSS root variables if provided in DRAW_CONFIG.palette
-    // This ensures #measure-display-box stacks pull colors from config
     const root = document.documentElement;
     const palette = DRAW_CONFIG.palette || {};
     if (palette.widthColor) {
@@ -49,19 +48,15 @@ export class MeasurementTool {
     this.controlContainer = document.createElement("div");
     this.controlContainer.id = "measurement-control-container";
 
-    // Order: Snap CB -> Dim CB -> Cursor CB -> Measurement CB
     this.controlContainer.innerHTML = `
-      <div class="control-item" id="snap-control-item" style="display: none;">
-        <input type="checkbox" id="snap-cb" disabled />
-        <label for="snap-cb">🧲</label>
-      </div>
-      <div class="control-item" id="dim-control-item" style="display: none;">
-        <input type="checkbox" id="dim-cb" checked />
-        <label for="dim-cb" id="dim-label">Luas ✔️</label>
-      </div>
-      <div class="control-item" id="cursor-control-item" style="display: none;">
-        <input type="checkbox" id="sim-cursor-cb" ${this.isSimulateCursorEnabled ? "checked" : ""} />
-        <label for="sim-cursor-cb">Cursor 🎯</label>
+      <div class="control-item" id="measure-options-container" style="display: none; position: relative;">
+        <button id="measure-options-btn" class="options-btn">⚙️</button>
+        <div id="measure-options-dropdown" class="options-dropdown" style="display: none;">
+          <label><input type="checkbox" id="snap-cb" disabled /> Snap 🧲</label>
+          <label><input type="checkbox" id="dim-cb" checked /> <span id="dim-label">Luas ✔️</span></label>
+          <label><input type="checkbox" id="sim-cursor-cb" ${this.isSimulateCursorEnabled ? "checked" : ""} /> Cursor 🎯</label>
+          <label><input type="checkbox" id="magnifier-cb" ${this.isMagnifierEnabled ? "checked" : ""} /> Magnifier 🔍</label>
+        </div>
       </div>
       <div class="control-item">
         <input type="checkbox" id="measurement-cb" disabled />
@@ -70,6 +65,19 @@ export class MeasurementTool {
     `;
     document.body.appendChild(this.controlContainer);
 
+    this.optionsContainer = document.getElementById(
+      "measure-options-container",
+    );
+    this.optionsBtn = document.getElementById("measure-options-btn");
+    this.optionsDropdown = document.getElementById("measure-options-dropdown");
+
+    this.snapCb = document.getElementById("snap-cb");
+    this.dimCb = document.getElementById("dim-cb");
+    this.dimLabel = document.getElementById("dim-label");
+    this.measureCb = document.getElementById("measurement-cb");
+    this.simCursorCb = document.getElementById("sim-cursor-cb");
+    this.magnifierCb = document.getElementById("magnifier-cb");
+
     this.displayBox = document.createElement("div");
     this.displayBox.id = "measure-display-box";
     document.body.appendChild(this.displayBox);
@@ -77,19 +85,31 @@ export class MeasurementTool {
     this.triggerBtn = document.createElement("button");
     this.triggerBtn.id = "trigger-action-btn";
     this.triggerBtn.textContent = "#";
-    this.triggerBtn.setAttribute("aria-label", "Trigger Target Action");
     document.body.appendChild(this.triggerBtn);
 
-    // Elements
-    this.snapControlItem = document.getElementById("snap-control-item");
-    this.dimControlItem = document.getElementById("dim-control-item");
-    this.cursorControlItem = document.getElementById("cursor-control-item");
+    // Magnifier DOM Elements
+    this.magnifierGlass = document.createElement("div");
+    this.magnifierGlass.id = "magnifier-glass";
+    this.magnifierContent = document.createElement("div");
+    this.magnifierContent.id = "magnifier-content";
+    this.magnifierCrosshair = document.createElement("div");
+    this.magnifierCrosshair.id = "magnifier-crosshair";
 
-    this.snapCb = document.getElementById("snap-cb");
-    this.dimCb = document.getElementById("dim-cb");
-    this.dimLabel = document.getElementById("dim-label");
-    this.measureCb = document.getElementById("measurement-cb");
-    this.simCursorCb = document.getElementById("sim-cursor-cb");
+    this.magnifierGlass.appendChild(this.magnifierContent);
+    this.magnifierGlass.appendChild(this.magnifierCrosshair);
+    document.body.appendChild(this.magnifierGlass);
+
+    this.applyMagnifierStyle();
+  }
+
+  applyMagnifierStyle() {
+    const magConf = DRAW_CONFIG.magnifier || {
+      size: 100,
+      style: "smooth-square",
+    };
+    this.magnifierGlass.style.width = `${magConf.size}px`;
+    this.magnifierGlass.style.height = `${magConf.size}px`;
+    this.magnifierGlass.className = magConf.style;
   }
 
   initSVGOverlay() {
@@ -106,7 +126,6 @@ export class MeasurementTool {
     const getDiagColor = () =>
       DRAW_CONFIG.palette?.diagColor || "var(--color-measure-diag)";
 
-    // Single Line Mode (dimMode = FALSE)
     this.line = document.createElementNS("http://www.w3.org/2000/svg", "line");
     this.line.setAttribute("stroke", getDiagColor());
     this.line.setAttribute("stroke-width", DRAW_CONFIG.style.lineWidth);
@@ -117,15 +136,10 @@ export class MeasurementTool {
     this.line.setAttribute("vector-effect", "non-scaling-stroke");
     this.line.style.display = "none";
 
-    // Horizontal Edges (Width)
     this.widthTop = this._createDashedLine(getWidthColor());
     this.widthBottom = this._createDashedLine(getWidthColor());
-
-    // Vertical Edges (Length)
     this.lengthLeft = this._createDashedLine(getLengthColor());
     this.lengthRight = this._createDashedLine(getLengthColor());
-
-    // Diagonal Line inside Bounding Box
     this.diagLine = this._createDashedLine(getDiagColor());
 
     this.startHandle = document.createElementNS(
@@ -198,7 +212,6 @@ export class MeasurementTool {
     this.stage.appendChild(this.svgOverlay);
   }
 
-  /** Helper: create a dashed measurement line with consistent styling */
   _createDashedLine(strokeColor) {
     const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
     line.setAttribute("stroke", strokeColor);
@@ -206,17 +219,6 @@ export class MeasurementTool {
     if (DRAW_CONFIG.style.linecap) {
       line.setAttribute("stroke-linecap", DRAW_CONFIG.style.linecap);
     }
-    line.setAttribute("stroke-dasharray", DRAW_CONFIG.style.lineDashArray);
-    line.setAttribute("vector-effect", "non-scaling-stroke");
-    line.style.display = "none";
-    return line;
-  }
-
-  /** Helper: create a dashed measurement line with consistent styling */
-  _createDashedLine(strokeColor) {
-    const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-    line.setAttribute("stroke", strokeColor);
-    line.setAttribute("stroke-width", DRAW_CONFIG.style.lineWidth);
     line.setAttribute("stroke-dasharray", DRAW_CONFIG.style.lineDashArray);
     line.setAttribute("vector-effect", "non-scaling-stroke");
     line.style.display = "none";
@@ -233,24 +235,32 @@ export class MeasurementTool {
       this.updateMenuAndMeasurementStates();
     });
 
-    // 1. #measurement-cb controls attached state of sub-CBs
+    this.optionsBtn.addEventListener("click", () => {
+      const isHidden = this.optionsDropdown.style.display === "none";
+      this.optionsDropdown.style.display = isHidden ? "flex" : "none";
+    });
+
+    document.addEventListener("click", (e) => {
+      if (this.optionsContainer && !this.optionsContainer.contains(e.target)) {
+        if (this.optionsDropdown) this.optionsDropdown.style.display = "none";
+      }
+    });
+
     this.measureCb.addEventListener("change", (e) => {
       const isChecked = e.target.checked;
       if (isChecked) {
-        this.snapControlItem.style.display = "flex";
-        this.dimControlItem.style.display = "flex";
-        this.cursorControlItem.style.display = "flex";
+        this.optionsContainer.style.display = "flex";
+        this.sidebarToggle.style.display = "none"; // Hide Sidebar Toggle
         this.syncDimAndSnapState();
         this.enable();
       } else {
-        this.snapControlItem.style.display = "none";
-        this.dimControlItem.style.display = "none";
-        this.cursorControlItem.style.display = "none";
+        this.optionsContainer.style.display = "none";
+        this.optionsDropdown.style.display = "none";
+        this.sidebarToggle.style.display = ""; // Restore Sidebar Toggle
         this.disable();
       }
     });
 
-    // 2. #dim-cb toggles dimension vs single line mode
     this.dimCb.addEventListener("change", (e) => {
       this.dimensionMode = e.target.checked;
       this.dimLabel.textContent = this.dimensionMode ? "Luas ✔️" : "Line ✔️";
@@ -260,6 +270,15 @@ export class MeasurementTool {
 
     this.snapCb.addEventListener("change", (e) => {
       this.isSnapEnabled = e.target.checked;
+    });
+
+    this.magnifierCb.addEventListener("change", (e) => {
+      this.isMagnifierEnabled = e.target.checked;
+      if (this.isMagnifierEnabled && this.appState.isMeasuring) {
+        this.updateMagnifierClone();
+      } else {
+        this.magnifierGlass.style.display = "none";
+      }
     });
 
     this.simCursorCb.addEventListener("change", (e) => {
@@ -277,9 +296,18 @@ export class MeasurementTool {
     });
 
     this.viewport.addEventListener("click", (e) => this.handleCanvasClick(e));
-    this.viewport.addEventListener("mousemove", (e) =>
-      this.handleCanvasMouseMove(e),
-    );
+
+    this.viewport.addEventListener("mousemove", (e) => {
+      if (!this.appState.isMeasuring) return;
+      this.handleCanvasMouseMove(e);
+      if (this.isMagnifierEnabled) {
+        this.updateMagnifierPosition(e.clientX, e.clientY);
+      }
+    });
+
+    this.viewport.addEventListener("mouseleave", () => {
+      if (this.magnifierGlass) this.magnifierGlass.style.display = "none";
+    });
 
     this.viewport.addEventListener(
       "touchstart",
@@ -296,8 +324,18 @@ export class MeasurementTool {
           }
           this.touchStartPos = { x: touch.clientX, y: touch.clientY };
           this.cursorStartPos = { ...this.simulatedCursorPoint };
+
+          if (this.isMagnifierEnabled) {
+            const screenPt = this.getScreenCoordinates(
+              this.simulatedCursorPoint,
+            );
+            this.updateMagnifierPosition(screenPt.x, screenPt.y);
+          }
         } else {
           this.commitPoint(currentStagePt);
+          if (this.isMagnifierEnabled) {
+            this.updateMagnifierPosition(touch.clientX, touch.clientY);
+          }
         }
       },
       { passive: false },
@@ -322,6 +360,15 @@ export class MeasurementTool {
 
           this.renderSimulatedCursor(this.simulatedCursorPoint);
           this.updateActiveMeasurementLine();
+
+          if (this.isMagnifierEnabled) {
+            const screenPt = this.getScreenCoordinates(
+              this.simulatedCursorPoint,
+            );
+            this.updateMagnifierPosition(screenPt.x, screenPt.y);
+          }
+        } else if (this.isMagnifierEnabled) {
+          this.updateMagnifierPosition(touch.clientX, touch.clientY);
         }
       },
       { passive: false },
@@ -330,14 +377,10 @@ export class MeasurementTool {
     this.viewport.addEventListener("touchend", () => {
       this.touchStartPos = null;
       this.cursorStartPos = null;
+      if (this.magnifierGlass) this.magnifierGlass.style.display = "none";
     });
   }
 
-  /**
-   * Synchronizes #snap-cb according to #dim-cb:
-   * - #dim-cb = true  -> forces #snap-cb = false and grayed (disabled)
-   * - #dim-cb = false -> forces #snap-cb = true and active (not grayed)
-   */
   syncDimAndSnapState() {
     if (this.dimensionMode) {
       this.snapCb.checked = false;
@@ -412,6 +455,9 @@ export class MeasurementTool {
     this.syncCoordinateSystem();
     this.clearLine();
     this.updateTriggerBtnVisibility();
+    if (this.isMagnifierEnabled) {
+      this.updateMagnifierClone();
+    }
   }
 
   disable() {
@@ -420,6 +466,7 @@ export class MeasurementTool {
     this.displayBox.style.display = "none";
     this.cursorGroup.style.display = "none";
     this.simulatedCursorPoint = null;
+    if (this.magnifierGlass) this.magnifierGlass.style.display = "none";
     this.clearLine();
     this.updateTriggerBtnVisibility();
   }
@@ -467,6 +514,72 @@ export class MeasurementTool {
     };
   }
 
+  getScreenCoordinates(stagePt) {
+    this.syncCoordinateSystem();
+    if (this.referenceSVG && this.svgOverlay.getScreenCTM) {
+      const ctm = this.svgOverlay.getScreenCTM();
+      if (ctm) {
+        const pt = this.svgOverlay.createSVGPoint();
+        pt.x = stagePt.x;
+        pt.y = stagePt.y;
+        const screenPt = pt.matrixTransform(ctm);
+        return { x: screenPt.x, y: screenPt.y };
+      }
+    }
+    const rect = this.stage.getBoundingClientRect();
+    return {
+      x: stagePt.x * this.appState.zoom + rect.left,
+      y: stagePt.y * this.appState.zoom + rect.top,
+    };
+  }
+
+  updateMagnifierClone() {
+    if (!this.isMagnifierEnabled) return;
+    this.magnifierContent.innerHTML = "";
+
+    // Clone raw blueprint state for magnifier
+    const clone = this.stage.cloneNode(true);
+    const rect = this.viewport.getBoundingClientRect();
+
+    clone.style.width = `${rect.width}px`;
+    clone.style.height = `${rect.height}px`;
+
+    // Remove active measuring overlays from clone to avoid visual overlap
+    const clonedOverlay = clone.querySelector(".measure-svg-overlay");
+    if (clonedOverlay) {
+      clonedOverlay.remove();
+    }
+
+    this.magnifierContent.appendChild(clone);
+  }
+
+  updateMagnifierPosition(clientX, clientY) {
+    if (!this.isMagnifierEnabled || !this.appState.isMeasuring) {
+      this.magnifierGlass.style.display = "none";
+      return;
+    }
+    this.magnifierGlass.style.display = "block";
+
+    const magConf = DRAW_CONFIG.magnifier || {};
+    const size = magConf.size || 110;
+    const z = magConf.zoomLevel || 2;
+
+    let magLeft = clientX - size / 2;
+    let magTop = clientY - size - 40;
+
+    // Handle Off-screen clipping
+    if (magTop < 0) magTop = clientY + 40;
+    if (magLeft < 0) magLeft = 10;
+    if (magLeft + size > window.innerWidth)
+      magLeft = window.innerWidth - size - 10;
+
+    this.magnifierGlass.style.left = `${magLeft}px`;
+    this.magnifierGlass.style.top = `${magTop}px`;
+
+    // Scale and translate the cloned view layer accurately around the cursor
+    this.magnifierContent.style.transform = `translate(${size / 2 - clientX * z}px, ${size / 2 - clientY * z}px) scale(${z})`;
+  }
+
   renderSimulatedCursor(point) {
     const arm = DRAW_CONFIG.style.cursorSize;
     this.cursorHLine.setAttribute("x1", point.x - arm);
@@ -497,18 +610,12 @@ export class MeasurementTool {
     if (!this.appState.isMeasuring) return;
     const point = this.getStageCoordinates(e);
 
-    // Always update simulated cursor when enabled (visual crosshair)
     if (this.isSimulateCursorEnabled) {
       this.simulatedCursorPoint = point;
       this.renderSimulatedCursor(point);
       this.updateActiveMeasurementLine();
     }
 
-    // Mouse / trackpad / stylus / pen: commit on canvas click.
-    // Touch devices rely on #trigger-action-btn (touch events already call
-    // preventDefault, so a synthetic click is suppressed). This restores free
-    // placement on desktop while keeping the button as the primary commit
-    // method for touch.
     this.commitPoint(point);
   }
 
@@ -560,7 +667,6 @@ export class MeasurementTool {
   }
 
   handleCanvasMouseMove(e) {
-    if (!this.appState.isMeasuring) return;
     let currentPoint = this.getStageCoordinates(e);
 
     if (this.isSimulateCursorEnabled) {
@@ -593,7 +699,6 @@ export class MeasurementTool {
       const y1 = Math.min(p1.y, p2.y);
       const y2 = Math.max(p1.y, p2.y);
 
-      // Horizontal edges (Width) – cyan from config
       this.widthTop.setAttribute("x1", x1);
       this.widthTop.setAttribute("y1", y1);
       this.widthTop.setAttribute("x2", x2);
@@ -604,7 +709,6 @@ export class MeasurementTool {
       this.widthBottom.setAttribute("x2", x2);
       this.widthBottom.setAttribute("y2", y2);
 
-      // Vertical edges (Length) – orange from config
       this.lengthLeft.setAttribute("x1", x1);
       this.lengthLeft.setAttribute("y1", y1);
       this.lengthLeft.setAttribute("x2", x1);
@@ -620,7 +724,6 @@ export class MeasurementTool {
       this.diagLine.setAttribute("x2", p2.x);
       this.diagLine.setAttribute("y2", p2.y);
     } else {
-      // Draw Single Straight Line
       this.widthTop.style.display = "none";
       this.widthBottom.style.display = "none";
       this.lengthLeft.style.display = "none";
@@ -637,7 +740,6 @@ export class MeasurementTool {
       const getDiagColor = () =>
         DRAW_CONFIG.palette?.diagColor || "var(--color-measure-diag)";
 
-      // Dynamically color line based on axis direction in single line mode
       if (dy === 0) {
         this.line.setAttribute("stroke", getWidthColor());
       } else if (dx === 0) {
@@ -670,8 +772,6 @@ export class MeasurementTool {
     };
 
     if (this.dimensionMode) {
-      // #dim-cb = TRUE: Always show 3 stacks (Width, Length, Diagonal)
-      // Colors come from CSS variables set by applyPaletteColors() from DRAW_CONFIG
       this.displayBox.innerHTML = `
         <div class="measure-stack width-stack">
           <span class="measure-title">Lebar 📏:</span>
@@ -687,7 +787,6 @@ export class MeasurementTool {
         </div>
       `;
     } else {
-      // #dim-cb = FALSE: Single stack dynamically detected by axis delta
       if (dy === 0) {
         this.displayBox.innerHTML = `
           <div class="measure-stack width-stack">
