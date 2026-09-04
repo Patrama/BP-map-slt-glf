@@ -16,6 +16,8 @@ export const DRAW_CONFIG = {
     lineDashArray: "4 4",
     handleRadius: 2,
     handleColor: "#00e5ff",
+    cursorColor: "#ff0055", // 🎯 Color for the + pointer cursor
+    cursorSize: 12, // 🎯 Arm length of the crosshair
   },
   snap: {
     defaultEnabled: true, // Snap enabled by default 🧲

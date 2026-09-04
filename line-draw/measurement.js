@@ -12,8 +12,11 @@ export class MeasurementTool {
 
     this.measureStartPoint = null;
     this.measureEndPoint = null;
+    this.simulatedCursorPoint = null;
+
     this.isSnapEnabled = DRAW_CONFIG.snap.defaultEnabled;
-    this.referenceSVG = null; // used for consistent SVG-user-space coordinates
+    this.isSimulateCursorEnabled = false;
+    this.referenceSVG = null;
 
     this.initDOM();
     this.initSVGOverlay();
@@ -22,7 +25,7 @@ export class MeasurementTool {
   }
 
   initDOM() {
-    // Top-right controls (Measurement + Snap)
+    // Controls Bar (Snap 🧲 | Cursor 🎯 | Measurement 📐)
     this.controlContainer = document.createElement("div");
     this.controlContainer.id = "measurement-control-container";
     this.controlContainer.innerHTML = `
@@ -31,13 +34,17 @@ export class MeasurementTool {
         <label for="snap-cb">Snap 🧲</label>
       </div>
       <div class="control-item">
+        <input type="checkbox" id="sim-cursor-cb" disabled />
+        <label for="sim-cursor-cb">Cursor 🎯</label>
+      </div>
+      <div class="control-item">
         <input type="checkbox" id="measurement-cb" disabled />
         <label for="measurement-cb">Measurement 📐</label>
       </div>
     `;
     document.body.appendChild(this.controlContainer);
 
-    // Readout box in top-left with stacked values
+    // Readout Display Box
     this.displayBox = document.createElement("div");
     this.displayBox.id = "measure-display-box";
     this.displayBox.innerHTML = `
@@ -50,7 +57,15 @@ export class MeasurementTool {
     `;
     document.body.appendChild(this.displayBox);
 
+    // Floating Trigger Action Button (#)
+    this.triggerBtn = document.createElement("button");
+    this.triggerBtn.id = "trigger-action-btn";
+    this.triggerBtn.textContent = "#";
+    this.triggerBtn.setAttribute("aria-label", "Trigger Target Action");
+    document.body.appendChild(this.triggerBtn);
+
     this.measureCb = document.getElementById("measurement-cb");
+    this.simCursorCb = document.getElementById("sim-cursor-cb");
     this.snapCb = document.getElementById("snap-cb");
     this.measureValues = document.getElementById("measure-values");
   }
@@ -62,13 +77,14 @@ export class MeasurementTool {
     );
     this.svgOverlay.classList.add("measure-svg-overlay");
 
+    // Line
     this.line = document.createElementNS("http://www.w3.org/2000/svg", "line");
     this.line.setAttribute("stroke", DRAW_CONFIG.style.lineColor);
     this.line.setAttribute("stroke-width", DRAW_CONFIG.style.lineWidth);
     this.line.setAttribute("stroke-dasharray", DRAW_CONFIG.style.lineDashArray);
-    // Keep visual thickness constant regardless of viewBox scale / zoom
     this.line.setAttribute("vector-effect", "non-scaling-stroke");
 
+    // Start Handle
     this.startHandle = document.createElementNS(
       "http://www.w3.org/2000/svg",
       "circle",
@@ -78,6 +94,7 @@ export class MeasurementTool {
     this.startHandle.setAttribute("vector-effect", "non-scaling-stroke");
     this.startHandle.style.display = "none";
 
+    // End Handle
     this.endHandle = document.createElementNS(
       "http://www.w3.org/2000/svg",
       "circle",
@@ -87,17 +104,43 @@ export class MeasurementTool {
     this.endHandle.setAttribute("vector-effect", "non-scaling-stroke");
     this.endHandle.style.display = "none";
 
+    // 🎯 Crosshair Cursor Pointer (+) Group
+    this.cursorGroup = document.createElementNS(
+      "http://www.w3.org/2000/svg",
+      "g",
+    );
+    this.cursorGroup.style.display = "none";
+
+    const arm = DRAW_CONFIG.style.cursorSize;
+    const strokeColor = DRAW_CONFIG.style.cursorColor;
+
+    this.cursorHLine = document.createElementNS(
+      "http://www.w3.org/2000/svg",
+      "line",
+    );
+    this.cursorHLine.setAttribute("stroke", strokeColor);
+    this.cursorHLine.setAttribute("stroke-width", "2");
+    this.cursorHLine.setAttribute("vector-effect", "non-scaling-stroke");
+
+    this.cursorVLine = document.createElementNS(
+      "http://www.w3.org/2000/svg",
+      "line",
+    );
+    this.cursorVLine.setAttribute("stroke", strokeColor);
+    this.cursorVLine.setAttribute("stroke-width", "2");
+    this.cursorVLine.setAttribute("vector-effect", "non-scaling-stroke");
+
+    this.cursorGroup.appendChild(this.cursorHLine);
+    this.cursorGroup.appendChild(this.cursorVLine);
+
     this.svgOverlay.appendChild(this.line);
     this.svgOverlay.appendChild(this.startHandle);
     this.svgOverlay.appendChild(this.endHandle);
+    this.svgOverlay.appendChild(this.cursorGroup);
+
     this.stage.appendChild(this.svgOverlay);
   }
 
-  /**
-   * Sync the measurement overlay to the same coordinate system as the
-   * blueprint SVGs. This makes measured distances independent of viewport
-   * size, device, zoom, and aspect-ratio changes.
-   */
   syncCoordinateSystem() {
     if (this.referenceSVG) return;
 
@@ -106,7 +149,6 @@ export class MeasurementTool {
 
     this.referenceSVG = svg;
 
-    // Prefer the explicit viewBox when present (design units)
     if (svg.viewBox && svg.viewBox.baseVal && svg.viewBox.baseVal.width > 0) {
       const vb = svg.viewBox.baseVal;
       this.svgOverlay.setAttribute(
@@ -138,16 +180,31 @@ export class MeasurementTool {
       }
     });
 
+    this.simCursorCb.addEventListener("change", (e) => {
+      this.isSimulateCursorEnabled = e.target.checked;
+      this.updateTriggerBtnVisibility();
+      if (!this.isSimulateCursorEnabled) {
+        this.cursorGroup.style.display = "none";
+        this.simulatedCursorPoint = null;
+      }
+    });
+
     this.snapCb.addEventListener("change", (e) => {
       this.isSnapEnabled = e.target.checked;
     });
 
+    // 🎯 Trigger Button (#) Click Action
+    this.triggerBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      this.handleTriggerAction();
+    });
+
+    // Viewport Interactions
     this.viewport.addEventListener("click", (e) => this.handleCanvasClick(e));
     this.viewport.addEventListener("mousemove", (e) =>
       this.handleCanvasMouseMove(e),
     );
 
-    // Touch support for measurement (pan/zoom is already blocked while measuring)
     this.viewport.addEventListener(
       "touchstart",
       (e) => {
@@ -157,6 +214,7 @@ export class MeasurementTool {
       },
       { passive: false },
     );
+
     this.viewport.addEventListener(
       "touchmove",
       (e) => {
@@ -172,26 +230,47 @@ export class MeasurementTool {
     setTimeout(() => {
       const isMenuOpen = this.leftMenu.classList.contains("open");
       this.measureCb.disabled = isMenuOpen;
+      this.simCursorCb.disabled = isMenuOpen;
+
       if (isMenuOpen && this.measureCb.checked) {
         this.measureCb.checked = false;
         this.disable();
       }
+
+      this.updateTriggerBtnVisibility();
     }, 0);
+  }
+
+  updateTriggerBtnVisibility() {
+    const isMenuOpen = this.leftMenu.classList.contains("open");
+    if (
+      this.appState.isMeasuring &&
+      this.isSimulateCursorEnabled &&
+      !isMenuOpen
+    ) {
+      this.triggerBtn.style.display = "flex";
+    } else {
+      this.triggerBtn.style.display = "none";
+    }
   }
 
   enable() {
     this.appState.isMeasuring = true;
     this.viewport.style.cursor = "crosshair";
     this.displayBox.style.display = "block";
-    this.syncCoordinateSystem(); // ensure viewBox is ready before first click
+    this.syncCoordinateSystem();
     this.clearLine();
+    this.updateTriggerBtnVisibility();
   }
 
   disable() {
     this.appState.isMeasuring = false;
     this.viewport.style.cursor = "default";
     this.displayBox.style.display = "none";
+    this.cursorGroup.style.display = "none";
+    this.simulatedCursorPoint = null;
     this.clearLine();
+    this.updateTriggerBtnVisibility();
   }
 
   clearLine() {
@@ -213,8 +292,6 @@ export class MeasurementTool {
   getStageCoordinates(e) {
     this.syncCoordinateSystem();
 
-    // Prefer mapping through the SVG user coordinate system so measurements
-    // stay consistent across desktop, mobile, window resizes and zoom levels.
     if (this.referenceSVG && this.svgOverlay.getScreenCTM) {
       const ctm = this.svgOverlay.getScreenCTM();
       if (ctm) {
@@ -226,12 +303,26 @@ export class MeasurementTool {
       }
     }
 
-    // Fallback (should only happen before any SVG has loaded)
     const rect = this.stage.getBoundingClientRect();
     return {
       x: (e.clientX - rect.left) / this.appState.zoom,
       y: (e.clientY - rect.top) / this.appState.zoom,
     };
+  }
+
+  renderSimulatedCursor(point) {
+    const arm = DRAW_CONFIG.style.cursorSize;
+    this.cursorHLine.setAttribute("x1", point.x - arm);
+    this.cursorHLine.setAttribute("y1", point.y);
+    this.cursorHLine.setAttribute("x2", point.x + arm);
+    this.cursorHLine.setAttribute("y2", point.y);
+
+    this.cursorVLine.setAttribute("x1", point.x);
+    this.cursorVLine.setAttribute("y1", point.y - arm);
+    this.cursorVLine.setAttribute("x2", point.x);
+    this.cursorVLine.setAttribute("y2", point.y + arm);
+
+    this.cursorGroup.style.display = "block";
   }
 
   applySnapPoint(start, current) {
@@ -268,6 +359,37 @@ export class MeasurementTool {
 
     let point = this.getStageCoordinates(e);
 
+    // 🎯 SIMULATE CURSOR MODE: Reposition cursor crosshair without setting points
+    if (this.isSimulateCursorEnabled) {
+      this.simulatedCursorPoint = point;
+      this.renderSimulatedCursor(point);
+
+      // If already drawing, update end point dynamically to target cursor
+      if (this.measureStartPoint && !this.measureEndPoint) {
+        const targetPoint = this.applySnapPoint(
+          this.measureStartPoint,
+          this.simulatedCursorPoint,
+        );
+        this.line.setAttribute("x2", targetPoint.x);
+        this.line.setAttribute("y2", targetPoint.y);
+        this.endHandle.setAttribute("cx", targetPoint.x);
+        this.endHandle.setAttribute("cy", targetPoint.y);
+        this.updateReadout(this.measureStartPoint, targetPoint);
+      }
+      return;
+    }
+
+    // NORMAL MODE: Set start / end points directly via tap
+    this.commitPoint(point);
+  }
+
+  // 🎯 Action triggered when tapping `#`
+  handleTriggerAction() {
+    if (!this.appState.isMeasuring || !this.simulatedCursorPoint) return;
+    this.commitPoint(this.simulatedCursorPoint);
+  }
+
+  commitPoint(point) {
     if (!this.measureStartPoint || this.measureEndPoint) {
       this.measureStartPoint = point;
       this.measureEndPoint = null;
@@ -300,14 +422,17 @@ export class MeasurementTool {
   }
 
   handleCanvasMouseMove(e) {
-    if (
-      !this.appState.isMeasuring ||
-      !this.measureStartPoint ||
-      this.measureEndPoint
-    )
-      return;
+    if (!this.appState.isMeasuring) return;
 
     let currentPoint = this.getStageCoordinates(e);
+
+    if (this.isSimulateCursorEnabled) {
+      this.simulatedCursorPoint = currentPoint;
+      this.renderSimulatedCursor(currentPoint);
+    }
+
+    if (!this.measureStartPoint || this.measureEndPoint) return;
+
     currentPoint = this.applySnapPoint(this.measureStartPoint, currentPoint);
 
     this.line.setAttribute("x2", currentPoint.x);
