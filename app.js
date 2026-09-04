@@ -16,6 +16,10 @@ import {
 } from "./floor-config/f3_CONFIG.js";
 
 import { MeasurementTool } from "./line-draw/measurement.js";
+
+// 🆕 Added Modal Initialization
+import { initGuideModal } from "./modal/guide_modal.js";
+
 import { getCachedSVG, setCachedSVG } from "./cache.js";
 import { initClearDataButton } from "./clear_data.js";
 
@@ -460,6 +464,7 @@ function init() {
   initSVGStage(FLOORS_DATA);
   renderAccordion(FLOORS_DATA, treeRoot);
   resetViewportCenter();
+  initGuideModal(); // 📖 Initialize guide button (Replaces the H2)
   initClearDataButton(); // 🧹 Initialize clear cache button at far right of header
 }
 

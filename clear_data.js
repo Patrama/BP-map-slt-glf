@@ -1,12 +1,9 @@
 /** @format */
 
 export function initClearDataButton() {
-  const h2 = document.querySelector("#left-menu > h2");
-  if (!h2) return;
-
-  h2.style.display = "flex";
-  h2.style.alignItems = "center";
-  h2.style.justifyContent = "space-between";
+  // 🔄 Updated target to append alongside the Guide Button
+  const headerContainer = document.querySelector("#menu-header-container");
+  if (!headerContainer) return;
 
   const clearBtn = document.createElement("button");
   clearBtn.type = "button";
@@ -14,6 +11,7 @@ export function initClearDataButton() {
   clearBtn.textContent = "Clear Data 🧹";
   clearBtn.title = "Clear site cache, IndexedDB, and storage";
 
+  // ... keeping the previous styling from clear_data.js
   clearBtn.style.background = "#333333";
   clearBtn.style.color = "#ff4d4d";
   clearBtn.style.border = "1px solid #555";
@@ -67,5 +65,5 @@ export function initClearDataButton() {
     }
   });
 
-  h2.appendChild(clearBtn);
+  headerContainer.appendChild(clearBtn);
 }
