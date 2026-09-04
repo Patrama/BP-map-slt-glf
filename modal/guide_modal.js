@@ -20,12 +20,10 @@ function parseCSV(text) {
   return data;
 }
 
-// 🆕 Helper to safely round numeric strings
 function applyRounding(val, mode) {
   if (!val || val === "-") return "-";
   if (mode === "0" || mode === "real") return val;
 
-  // Only parse if it's a standard numeric value (leaves items like "24½" completely untouched)
   if (/^-?\d+(\.\d+)?$/.test(val)) {
     const num = parseFloat(val);
     if (mode === "up") return Math.ceil(num).toString();
@@ -34,7 +32,6 @@ function applyRounding(val, mode) {
   return val;
 }
 
-// 🆕 Helper to generate aligned rows
 function generateRow(label, rawValue, roundingMode) {
   const finalValue = applyRounding(rawValue, roundingMode);
   return `
@@ -89,13 +86,14 @@ export function initGuideModal() {
     modalOverlay.classList.remove("active");
   });
 
-  guideBtn.addEventListener("click", async () => {
-    modalOverlay.classList.add("active");
+  // 🔄 Helper function to fetch data for the active tab
+  async function loadTabData() {
     modalContent.innerHTML =
       "<p style='padding: 2rem; text-align: center;'>Loading data...</p>";
 
     try {
-      const res = await fetch(GUIDE_CONFIG.CSV_URL);
+      const url = GUIDE_CONFIG.CSV_URLS[currentTab]; // ✅ Fetch from CSV_URLS mapping
+      const res = await fetch(url);
       const text = await res.text();
       csvData = parseCSV(text);
       renderModalContent();
@@ -103,12 +101,16 @@ export function initGuideModal() {
       modalContent.innerHTML =
         "<p style='padding: 2rem; color: #ff4d4d;'>Error loading guide data.</p>";
     }
+  }
+
+  guideBtn.addEventListener("click", async () => {
+    modalOverlay.classList.add("active");
+    await loadTabData();
   });
 
   function renderModalContent() {
     modalContent.innerHTML = "";
 
-    // 🆕 Rounding Dropdown
     const controlsContainer = document.createElement("div");
     controlsContainer.className = "guide-header-controls";
     controlsContainer.innerHTML = `
@@ -135,16 +137,17 @@ export function initGuideModal() {
       const tabBtn = document.createElement("button");
       tabBtn.className = `guide-tab-btn ${currentTab === tab ? "active" : ""}`;
 
-      // 🆕 Inject unit span
       const unit = GUIDE_CONFIG.UNITS[tab];
       const unitHtml = unit
         ? `<span class="guide-tab-unit">- ${unit}</span>`
         : "";
       tabBtn.innerHTML = `${tab} ${unitHtml}`;
 
-      tabBtn.addEventListener("click", () => {
-        currentTab = tab;
-        renderModalContent();
+      tabBtn.addEventListener("click", async () => {
+        if (currentTab !== tab) {
+          currentTab = tab;
+          await loadTabData(); // 🔄 Reload data when switching tabs to use the new CSV URL
+        }
       });
       tabContainer.appendChild(tabBtn);
     });
@@ -193,8 +196,32 @@ export function initGuideModal() {
         dataContainer.appendChild(card);
       });
     } else {
-      dataContainer.innerHTML =
-        "<p style='color: #888; text-align: center;'>Data for Outdoor will be available in future improvements.</p>";
+      csvData.forEach((row) => {
+        const card = document.createElement("div");
+        card.className = "guide-card";
+
+        const outdoorName = row["OUTDOOR"] || "-";
+        const pkName = row["PK"] || "-";
+
+        card.innerHTML = `
+          <div class="guide-card-header">
+            <strong>${outdoorName}</strong> - <strong>${pkName}</strong>
+          </div>
+          <div class="guide-card-grid">
+            <div class="guide-col">
+              <div class="guide-col-title">Dimensi</div>
+              ${generateRow("Lebar", row["L"], currentRounding)}
+              ${generateRow("Panjang", row["P"], currentRounding)}
+              ${generateRow("Tinggi", row["T"], currentRounding)}
+            </div>
+            <div class="guide-col">
+              <div class="guide-col-title">Jarak Kaki</div>
+              ${generateRow("Lebar", row["Shoe"], currentRounding)}
+            </div>
+          </div>
+        `;
+        dataContainer.appendChild(card);
+      });
     }
 
     modalContent.appendChild(dataContainer);
