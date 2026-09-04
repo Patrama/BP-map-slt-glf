@@ -55,7 +55,8 @@ html {
 /* BOTTOM SIDEBAR TOGGLE BUTTON 🔻 */
 #sidebar-toggle {
   position: absolute;
-  bottom: calc(1rem + env(safe-area-inset-bottom));
+  /* bottom: calc(1rem + env(safe-area-inset-bottom)); */
+  top: calc(2rem + env(safe-area-inset-bottom));
   right: 1rem;
   width: 48px;
   height: 48px;
@@ -79,7 +80,8 @@ html {
   position: absolute;
   left: 100%;
   right: auto;
-  bottom: calc(1rem + env(safe-area-inset-bottom));
+  /* bottom: calc(1rem + env(safe-area-inset-bottom)); */
+  top: calc(2rem + env(safe-area-inset-bottom));
   margin-left: 0.5rem; /* small gap from the screen edge */
 }
 
@@ -290,7 +292,8 @@ html {
 
   #sidebar-toggle {
     position: absolute;
-    bottom: 1.5rem;
+    /* bottom: 1.5rem; */
+    top: 2rem;
     right: -42px;
     width: 42px;
     height: 42px;
@@ -302,7 +305,8 @@ html {
   #left-menu:not(.open) #sidebar-toggle {
     position: absolute;
     left: 320px;
-    bottom: 1.5rem;
+    /* bottom: 1.5rem; */
+    top: 2rem;
     margin-left: 0;
   }
 
