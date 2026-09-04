@@ -31,24 +31,17 @@ export class MeasurementTool {
 
   applyPaletteColors() {
     // Override CSS root variables if provided in DRAW_CONFIG.palette
+    // This ensures #measure-display-box stacks pull colors from config
     const root = document.documentElement;
-    if (DRAW_CONFIG.palette?.widthColor) {
-      root.style.setProperty(
-        "--color-measure-width",
-        DRAW_CONFIG.palette.widthColor,
-      );
+    const palette = DRAW_CONFIG.palette || {};
+    if (palette.widthColor) {
+      root.style.setProperty("--color-measure-width", palette.widthColor);
     }
-    if (DRAW_CONFIG.palette?.lengthColor) {
-      root.style.setProperty(
-        "--color-measure-length",
-        DRAW_CONFIG.palette.lengthColor,
-      );
+    if (palette.lengthColor) {
+      root.style.setProperty("--color-measure-length", palette.lengthColor);
     }
-    if (DRAW_CONFIG.palette?.diagColor) {
-      root.style.setProperty(
-        "--color-measure-diag",
-        DRAW_CONFIG.palette.diagColor,
-      );
+    if (palette.diagColor) {
+      root.style.setProperty("--color-measure-diag", palette.diagColor);
     }
   }
 
@@ -60,11 +53,11 @@ export class MeasurementTool {
     this.controlContainer.innerHTML = `
       <div class="control-item" id="snap-control-item" style="display: none;">
         <input type="checkbox" id="snap-cb" disabled />
-        <label for="snap-cb">Snap 🧲</label>
+        <label for="snap-cb">🧲</label>
       </div>
       <div class="control-item" id="dim-control-item" style="display: none;">
         <input type="checkbox" id="dim-cb" checked />
-        <label for="dim-cb" id="dim-label">Dims ✔️</label>
+        <label for="dim-cb" id="dim-label">Luas ✔️</label>
       </div>
       <div class="control-item" id="cursor-control-item" style="display: none;">
         <input type="checkbox" id="sim-cursor-cb" ${this.isSimulateCursorEnabled ? "checked" : ""} />
@@ -117,52 +110,23 @@ export class MeasurementTool {
     this.line = document.createElementNS("http://www.w3.org/2000/svg", "line");
     this.line.setAttribute("stroke", getDiagColor());
     this.line.setAttribute("stroke-width", DRAW_CONFIG.style.lineWidth);
+    if (DRAW_CONFIG.style.linecap) {
+      this.line.setAttribute("stroke-linecap", DRAW_CONFIG.style.linecap);
+    }
     this.line.setAttribute("stroke-dasharray", DRAW_CONFIG.style.lineDashArray);
     this.line.setAttribute("vector-effect", "non-scaling-stroke");
+    this.line.style.display = "none";
 
     // Horizontal Edges (Width)
-    this.widthRect = document.createElementNS(
-      "http://www.w3.org/2000/svg",
-      "rect",
-    );
-    this.widthRect.setAttribute("stroke", getWidthColor());
-    this.widthRect.setAttribute("stroke-width", DRAW_CONFIG.style.lineWidth);
-    this.widthRect.setAttribute(
-      "stroke-dasharray",
-      DRAW_CONFIG.style.lineDashArray,
-    );
-    this.widthRect.setAttribute("fill", "none");
-    this.widthRect.setAttribute("vector-effect", "non-scaling-stroke");
-    this.widthRect.style.display = "none";
+    this.widthTop = this._createDashedLine(getWidthColor());
+    this.widthBottom = this._createDashedLine(getWidthColor());
 
     // Vertical Edges (Length)
-    this.lengthRect = document.createElementNS(
-      "http://www.w3.org/2000/svg",
-      "rect",
-    );
-    this.lengthRect.setAttribute("stroke", getLengthColor());
-    this.lengthRect.setAttribute("stroke-width", DRAW_CONFIG.style.lineWidth);
-    this.lengthRect.setAttribute(
-      "stroke-dasharray",
-      DRAW_CONFIG.style.lineDashArray,
-    );
-    this.lengthRect.setAttribute("fill", "none");
-    this.lengthRect.setAttribute("vector-effect", "non-scaling-stroke");
-    this.lengthRect.style.display = "none";
+    this.lengthLeft = this._createDashedLine(getLengthColor());
+    this.lengthRight = this._createDashedLine(getLengthColor());
 
     // Diagonal Line inside Bounding Box
-    this.diagLine = document.createElementNS(
-      "http://www.w3.org/2000/svg",
-      "line",
-    );
-    this.diagLine.setAttribute("stroke", getDiagColor());
-    this.diagLine.setAttribute("stroke-width", DRAW_CONFIG.style.lineWidth);
-    this.diagLine.setAttribute(
-      "stroke-dasharray",
-      DRAW_CONFIG.style.lineDashArray,
-    );
-    this.diagLine.setAttribute("vector-effect", "non-scaling-stroke");
-    this.diagLine.style.display = "none";
+    this.diagLine = this._createDashedLine(getDiagColor());
 
     this.startHandle = document.createElementNS(
       "http://www.w3.org/2000/svg",
@@ -222,14 +186,41 @@ export class MeasurementTool {
     this.cursorGroup.appendChild(this.cursorDot);
 
     this.svgOverlay.appendChild(this.line);
-    this.svgOverlay.appendChild(this.widthRect);
-    this.svgOverlay.appendChild(this.lengthRect);
+    this.svgOverlay.appendChild(this.widthTop);
+    this.svgOverlay.appendChild(this.widthBottom);
+    this.svgOverlay.appendChild(this.lengthLeft);
+    this.svgOverlay.appendChild(this.lengthRight);
     this.svgOverlay.appendChild(this.diagLine);
     this.svgOverlay.appendChild(this.startHandle);
     this.svgOverlay.appendChild(this.endHandle);
     this.svgOverlay.appendChild(this.cursorGroup);
 
     this.stage.appendChild(this.svgOverlay);
+  }
+
+  /** Helper: create a dashed measurement line with consistent styling */
+  _createDashedLine(strokeColor) {
+    const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    line.setAttribute("stroke", strokeColor);
+    line.setAttribute("stroke-width", DRAW_CONFIG.style.lineWidth);
+    if (DRAW_CONFIG.style.linecap) {
+      line.setAttribute("stroke-linecap", DRAW_CONFIG.style.linecap);
+    }
+    line.setAttribute("stroke-dasharray", DRAW_CONFIG.style.lineDashArray);
+    line.setAttribute("vector-effect", "non-scaling-stroke");
+    line.style.display = "none";
+    return line;
+  }
+
+  /** Helper: create a dashed measurement line with consistent styling */
+  _createDashedLine(strokeColor) {
+    const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    line.setAttribute("stroke", strokeColor);
+    line.setAttribute("stroke-width", DRAW_CONFIG.style.lineWidth);
+    line.setAttribute("stroke-dasharray", DRAW_CONFIG.style.lineDashArray);
+    line.setAttribute("vector-effect", "non-scaling-stroke");
+    line.style.display = "none";
+    return line;
   }
 
   bindEvents() {
@@ -262,7 +253,7 @@ export class MeasurementTool {
     // 2. #dim-cb toggles dimension vs single line mode
     this.dimCb.addEventListener("change", (e) => {
       this.dimensionMode = e.target.checked;
-      this.dimLabel.textContent = this.dimensionMode ? "Dims ✔️" : "Line ✔️";
+      this.dimLabel.textContent = this.dimensionMode ? "Luas ✔️" : "Line ✔️";
       this.syncDimAndSnapState();
       this.clearLine();
     });
@@ -437,33 +428,24 @@ export class MeasurementTool {
     this.measureStartPoint = null;
     this.measureEndPoint = null;
 
-    this.line.setAttribute("x1", "0");
-    this.line.setAttribute("y1", "0");
-    this.line.setAttribute("x2", "0");
-    this.line.setAttribute("y2", "0");
-    this.line.style.display = "none";
-
-    this.widthRect.setAttribute("x", "0");
-    this.widthRect.setAttribute("y", "0");
-    this.widthRect.setAttribute("width", "0");
-    this.widthRect.setAttribute("height", "0");
-    this.widthRect.style.display = "none";
-
-    this.lengthRect.setAttribute("x", "0");
-    this.lengthRect.setAttribute("y", "0");
-    this.lengthRect.setAttribute("width", "0");
-    this.lengthRect.setAttribute("height", "0");
-    this.lengthRect.style.display = "none";
-
-    this.diagLine.setAttribute("x1", "0");
-    this.diagLine.setAttribute("y1", "0");
-    this.diagLine.setAttribute("x2", "0");
-    this.diagLine.setAttribute("y2", "0");
-    this.diagLine.style.display = "none";
+    this._resetLine(this.line);
+    this._resetLine(this.widthTop);
+    this._resetLine(this.widthBottom);
+    this._resetLine(this.lengthLeft);
+    this._resetLine(this.lengthRight);
+    this._resetLine(this.diagLine);
 
     this.startHandle.style.display = "none";
     this.endHandle.style.display = "none";
     this.displayBox.innerHTML = "";
+  }
+
+  _resetLine(el) {
+    el.setAttribute("x1", "0");
+    el.setAttribute("y1", "0");
+    el.setAttribute("x2", "0");
+    el.setAttribute("y2", "0");
+    el.style.display = "none";
   }
 
   getStageCoordinates(e) {
@@ -513,14 +495,20 @@ export class MeasurementTool {
 
   handleCanvasClick(e) {
     if (!this.appState.isMeasuring) return;
-    let point = this.getStageCoordinates(e);
+    const point = this.getStageCoordinates(e);
 
+    // Always update simulated cursor when enabled (visual crosshair)
     if (this.isSimulateCursorEnabled) {
       this.simulatedCursorPoint = point;
       this.renderSimulatedCursor(point);
       this.updateActiveMeasurementLine();
-      return;
     }
+
+    // Mouse / trackpad / stylus / pen: commit on canvas click.
+    // Touch devices rely on #trigger-action-btn (touch events already call
+    // preventDefault, so a synthetic click is suppressed). This restores free
+    // placement on desktop while keeping the button as the primary commit
+    // method for touch.
     this.commitPoint(point);
   }
 
@@ -594,25 +582,38 @@ export class MeasurementTool {
   drawGeometry(p1, p2) {
     if (this.dimensionMode) {
       this.line.style.display = "none";
-      this.widthRect.style.display = "block";
-      this.lengthRect.style.display = "block";
+      this.widthTop.style.display = "block";
+      this.widthBottom.style.display = "block";
+      this.lengthLeft.style.display = "block";
+      this.lengthRight.style.display = "block";
       this.diagLine.style.display = "block";
 
-      const x = Math.min(p1.x, p2.x);
-      const y = Math.min(p1.y, p2.y);
-      const width = Math.abs(p2.x - p1.x);
-      const height = Math.abs(p2.y - p1.y);
+      const x1 = Math.min(p1.x, p2.x);
+      const x2 = Math.max(p1.x, p2.x);
+      const y1 = Math.min(p1.y, p2.y);
+      const y2 = Math.max(p1.y, p2.y);
 
-      // Apply exact positions for width & length box overlays
-      this.widthRect.setAttribute("x", x);
-      this.widthRect.setAttribute("y", y);
-      this.widthRect.setAttribute("width", width);
-      this.widthRect.setAttribute("height", height);
+      // Horizontal edges (Width) – cyan from config
+      this.widthTop.setAttribute("x1", x1);
+      this.widthTop.setAttribute("y1", y1);
+      this.widthTop.setAttribute("x2", x2);
+      this.widthTop.setAttribute("y2", y1);
 
-      this.lengthRect.setAttribute("x", x);
-      this.lengthRect.setAttribute("y", y);
-      this.lengthRect.setAttribute("width", width);
-      this.lengthRect.setAttribute("height", height);
+      this.widthBottom.setAttribute("x1", x1);
+      this.widthBottom.setAttribute("y1", y2);
+      this.widthBottom.setAttribute("x2", x2);
+      this.widthBottom.setAttribute("y2", y2);
+
+      // Vertical edges (Length) – orange from config
+      this.lengthLeft.setAttribute("x1", x1);
+      this.lengthLeft.setAttribute("y1", y1);
+      this.lengthLeft.setAttribute("x2", x1);
+      this.lengthLeft.setAttribute("y2", y2);
+
+      this.lengthRight.setAttribute("x1", x2);
+      this.lengthRight.setAttribute("y1", y1);
+      this.lengthRight.setAttribute("x2", x2);
+      this.lengthRight.setAttribute("y2", y2);
 
       this.diagLine.setAttribute("x1", p1.x);
       this.diagLine.setAttribute("y1", p1.y);
@@ -620,8 +621,10 @@ export class MeasurementTool {
       this.diagLine.setAttribute("y2", p2.y);
     } else {
       // Draw Single Straight Line
-      this.widthRect.style.display = "none";
-      this.lengthRect.style.display = "none";
+      this.widthTop.style.display = "none";
+      this.widthBottom.style.display = "none";
+      this.lengthLeft.style.display = "none";
+      this.lengthRight.style.display = "none";
       this.diagLine.style.display = "none";
       this.line.style.display = "block";
 
@@ -668,13 +671,14 @@ export class MeasurementTool {
 
     if (this.dimensionMode) {
       // #dim-cb = TRUE: Always show 3 stacks (Width, Length, Diagonal)
+      // Colors come from CSS variables set by applyPaletteColors() from DRAW_CONFIG
       this.displayBox.innerHTML = `
         <div class="measure-stack width-stack">
-          <span class="measure-title">Width 📏:</span>
+          <span class="measure-title">Lebar 📏:</span>
           <span>${formatValues(absWidthM)}</span>
         </div>
         <div class="measure-stack length-stack">
-          <span class="measure-title">Length 📏:</span>
+          <span class="measure-title">Panjang 📏:</span>
           <span>${formatValues(absLengthM)}</span>
         </div>
         <div class="measure-stack diag-stack">
@@ -687,14 +691,14 @@ export class MeasurementTool {
       if (dy === 0) {
         this.displayBox.innerHTML = `
           <div class="measure-stack width-stack">
-            <span class="measure-title">Width 📏:</span>
+            <span class="measure-title">Lebar 📏:</span>
             <span>${formatValues(absWidthM)}</span>
           </div>
         `;
       } else if (dx === 0) {
         this.displayBox.innerHTML = `
           <div class="measure-stack length-stack">
-            <span class="measure-title">Length 📏:</span>
+            <span class="measure-title">Panjang 📏:</span>
             <span>${formatValues(absLengthM)}</span>
           </div>
         `;

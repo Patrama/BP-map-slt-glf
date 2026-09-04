@@ -1,4 +1,5 @@
 /** @format */
+
 export const CONFIG_3RD_FLOOR = {
   zoom: {
     min: 0.2,

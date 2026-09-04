@@ -17,6 +17,7 @@ import {
 
 import { MeasurementTool } from "./line-draw/measurement.js";
 import { getCachedSVG, setCachedSVG } from "./cache.js";
+import { initClearDataButton } from "./clear_data.js";
 
 // Combine structural data for all floors
 const FLOORS_DATA = [
@@ -459,6 +460,7 @@ function init() {
   initSVGStage(FLOORS_DATA);
   renderAccordion(FLOORS_DATA, treeRoot);
   resetViewportCenter();
+  initClearDataButton(); // 🧹 Initialize clear cache button at far right of header
 }
 
 init();

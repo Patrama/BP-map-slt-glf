@@ -86,6 +86,15 @@ html {
   margin-left: 0.5rem;
 }
 
+#left-menu h2 {
+  font-size: 1.1rem;
+  margin-bottom: 0.75rem;
+  color: #4da6ff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
 .toggle-icon {
   font-size: 1rem;
   transition: transform 0.3s ease;

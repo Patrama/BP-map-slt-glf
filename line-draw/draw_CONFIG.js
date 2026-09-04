@@ -11,19 +11,22 @@ export const DRAW_CONFIG = {
     diagColor: "#09ff00", // 🎨 Diagonal line & text color
   },
   style: {
-    lineColor: "#09ff00",
+    // lineColor: "#09ff00",
     lineWidth: 0.5,
-    lineDashArray: "4 4",
+    linecap: "round", // ⚡ Line cap ROUND, SQUARE, BUTT
+    // linejoin: "round", // ⚡ Line join ROUND, BEVEL, MITER
+    // lineMiterLimit: 4, // ⚡ Line miter limit (for MITER line join)
+    lineDashArray: "0 0 0 0", // ⚡ Line dash array (for dashed lines)
 
     handleColor: "#ff0055",
-    handleRadius: 1.5,
+    handleRadius: 2,
 
-    cursorColor: "#00000000",
+    cursorColor: "#000000a1",
     cursorSize: 8,
-    cursorStrokeWidth: 1,
+    cursorStrokeWidth: 2,
 
     cursorDotColor: "#FF0000",
-    cursorDotRadius: 1.5,
+    cursorDotRadius: 2,
   },
   snap: {
     defaultEnabled: true,
