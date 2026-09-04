@@ -52,17 +52,17 @@ html {
   transform: translateX(0);
 }
 
-/* MOBILE-FIRST SIDEBAR TOGGLE BUTTON 🔻 */
+/* BASE SIDEBAR TOGGLE BUTTON 🔻 */
 #sidebar-toggle {
-  position: fixed !important;
-  top: 50dvh !important;
-  transform: translateY(-50%) !important;
-  right: 1rem;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
   width: 48px;
-  height: 48px;
+  /* height: 48px; */
+  height: 78px;
   background: #242424;
   border: 1px solid #444;
-  border-radius: 50%;
+  /* border-radius: 50%; */
   color: #4da6ff;
   display: flex;
   align-items: center;
@@ -72,17 +72,18 @@ html {
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
 }
 
-/* When closed on mobile */
-#left-menu:not(.open) #sidebar-toggle {
-  position: fixed !important;
-  left: 0.5rem !important;
-  right: auto !important;
-  top: 50dvh !important;
-  transform: translateY(-50%) !important;
+/* OPEN STATE: Sitting inside the right edge of the sidebar */
+#left-menu.open #sidebar-toggle {
+  right: 1rem;
+  left: auto;
 }
 
-#left-menu.open #sidebar-toggle {
-  left: calc(100vw - 3.5rem) !important;
+/* CLOSED STATE: Pinning button to screen edge when sidebar hides */
+#left-menu:not(.open) #sidebar-toggle {
+  position: absolute;
+  left: 100%;
+  right: auto;
+  margin-left: 0.5rem;
 }
 
 .toggle-icon {
@@ -282,8 +283,8 @@ html {
   text-rendering: geometricPrecision;
 }
 
-/* DESKTOP ADAPTATIONS (>=768px) */
-@media (min-width: 768px) {
+/* DESKTOP STYLES (>=1024px or Desktop layout) */
+@media (min-width: 1024px) {
   #left-menu {
     width: 320px;
     border-right: 1px solid #333;
@@ -291,11 +292,6 @@ html {
   }
 
   #sidebar-toggle {
-    position: absolute !important;
-    top: 50% !important;
-    transform: translateY(-50%) !important;
-    right: -42px !important;
-    left: auto !important;
     width: 42px;
     height: 42px;
     border-radius: 0 8px 8px 0;
@@ -303,12 +299,12 @@ html {
     box-shadow: 4px 0 8px rgba(0, 0, 0, 0.3);
   }
 
+  #left-menu.open #sidebar-toggle {
+    right: -42px;
+  }
+
   #left-menu:not(.open) #sidebar-toggle {
-    position: absolute !important;
-    left: 320px !important;
-    right: auto !important;
-    top: 50% !important;
-    transform: translateY(-50%) !important;
+    left: 320px;
     margin-left: 0;
   }
 

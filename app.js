@@ -16,6 +16,7 @@ import {
 } from "./floor-config/f3_CONFIG.js";
 
 import { MeasurementTool } from "./line-draw/measurement.js";
+import { getCachedSVG, setCachedSVG } from "./cache.js";
 
 // Combine structural data for all floors
 const FLOORS_DATA = [
@@ -111,8 +112,12 @@ function getFunctionalZIndex(node) {
 
 async function loadInlineSVG(url, container) {
   try {
-    const res = await fetch(url);
-    const svgText = await res.text();
+    let svgText = await getCachedSVG(url);
+    if (!svgText) {
+      const res = await fetch(url);
+      svgText = await res.text();
+      setCachedSVG(url, svgText); // fire-and-forget; don't block rendering on the write
+    }
     const parser = new DOMParser();
     const doc = parser.parseFromString(svgText, "image/svg+xml");
     const svgEl = doc.querySelector("svg");

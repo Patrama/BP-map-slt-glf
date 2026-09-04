@@ -1,8 +1,14 @@
 /**
- * Measurement Tool Overlay Controls
+ * Root Color Palette Definition 🎨
  *
  * @format
  */
+
+:root {
+  --color-measure-width: #00e5ff; /* Horizontal / Width color */
+  --color-measure-length: #ff9100; /* Vertical / Length color */
+  --color-measure-diag: #09ff00; /* Diagonal color */
+}
 
 #measurement-control-container {
   position: fixed;
@@ -41,48 +47,48 @@
   opacity: 0.5;
 }
 
-/* Vertical Measurement Panel */
+/* Vertical Measurement Display Box Stack */
 #measure-display-box {
   display: none;
   position: fixed;
   top: 1rem;
   left: 1rem;
   z-index: 1000;
+  flex-direction: column;
+  gap: 0.4rem;
   background: rgba(30, 30, 30, 0.95);
-  color: #00e5ff;
-  padding: 0.6rem 0.9rem;
+  border: 1px solid #333;
   border-radius: 8px;
-  border: 1px solid #333333;
+  padding: 0.6rem;
   font-family: monospace;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-  min-width: 130px;
+  min-width: 220px;
 }
 
-.measure-title {
-  font-size: 0.65rem;
-  color: #aaaaaa;
-  margin-bottom: 0.4rem;
-  letter-spacing: 0.5px;
-  border-bottom: 1px solid #333;
-  padding-bottom: 0.2rem;
-}
-
-#measure-values {
-  letter-spacing: 1.5px;
+.measure-stack {
   display: flex;
   flex-direction: column;
   gap: 0.2rem;
+  background: #2a2a2a;
+  padding: 0.4rem 0.6rem;
+  border-radius: 4px;
 }
 
-.measure-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+/* Dynamic Text Color Classes using Root CSS Variables */
+.measure-stack.width-stack {
+  color: var(--color-measure-width);
+}
+.measure-stack.length-stack {
+  color: var(--color-measure-length);
+}
+.measure-stack.diag-stack {
+  color: var(--color-measure-diag);
 }
 
-.measure-row strong {
+.measure-title {
   font-weight: 600;
+  font-size: 0.75rem;
 }
 
 /* Vector Pen SVG Layer */
@@ -96,9 +102,9 @@
   z-index: 9999;
 }
 
-/* 🎯 Floating Trigger Button (#) */
+/* Floating Trigger Button */
 #trigger-action-btn {
-  display: none; /* Shown when Measurement + Simulate Cursor are active */
+  display: none;
   position: fixed;
   bottom: calc(1.5rem + env(safe-area-inset-bottom));
   left: 1.5rem;
