@@ -18,11 +18,11 @@ export const DRAW_CONFIG = {
     handleColor: "#ff0055",
     handleRadius: 1.5,
 
-    cursorColor: "#ff0055",
+    cursorColor: "#00000000",
     cursorSize: 8,
     cursorStrokeWidth: 1,
 
-    cursorDotColor: "#ffff00",
+    cursorDotColor: "#FF0000",
     cursorDotRadius: 1.5,
   },
   snap: {
