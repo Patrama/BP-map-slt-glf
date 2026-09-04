@@ -1,5 +1,6 @@
 /** @format */
 
+/* ... (Keep previous overlay and modal content styles) ... */
 .guide-modal-overlay {
   position: fixed;
   top: 0;
@@ -15,7 +16,7 @@
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.2s ease;
-  padding: 2rem; /* Ensures space to click outside */
+  padding: 2rem;
 }
 
 .guide-modal-overlay.active {
@@ -37,6 +38,27 @@
   border: 1px solid #444;
 }
 
+/* 🆕 Rounding Header Controls */
+.guide-header-controls {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  background: #1a1a1a;
+  padding: 0.75rem 1.2rem;
+  border-bottom: 1px solid #333;
+}
+
+.guide-rounding-select {
+  background: #2a2a2a;
+  color: #fff;
+  border: 1px solid #444;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  outline: none;
+  cursor: pointer;
+}
+
 .guide-tabs {
   display: flex;
   background: #242424;
@@ -53,12 +75,28 @@
   font-size: 1rem;
   font-weight: bold;
   transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
 }
 
 .guide-tab-btn.active {
+  letter-spacing: 0.2rem;
+
   color: #4da6ff;
   background: #1e1e1e;
   border-bottom: 2px solid #4da6ff;
+}
+
+/* 🆕 Tab Unit Formatting */
+.guide-tab-unit {
+  color: #fd0;
+  font-size: 1.2rem;
+}
+
+.guide-tab-btn:not(.active) .guide-tab-unit {
+  display: none;
 }
 
 .guide-data-container {
@@ -69,7 +107,6 @@
   gap: 1.5rem;
 }
 
-/* Card formatting based on Indoor.jpg */
 .guide-card {
   background: #2a2a2a;
   border-radius: 8px;
@@ -105,14 +142,25 @@
   padding-bottom: 0.25rem;
 }
 
+/* 🆕 Aligned Grid for Colons */
 .guide-row {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: 65px 15px 1fr;
   font-size: 0.95rem;
   color: #ddd;
+  align-items: center;
 }
 
-/* New ? Guide Button */
+.guide-row-colon {
+  text-align: center;
+  color: #888;
+}
+
+.guide-row-value {
+  font-weight: 500;
+  color: #fff;
+}
+
 .guide-button {
   background: #2a2a2a;
   color: #4da6ff;

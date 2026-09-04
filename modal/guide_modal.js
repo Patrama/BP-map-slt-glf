@@ -20,11 +20,36 @@ function parseCSV(text) {
   return data;
 }
 
+// 🆕 Helper to safely round numeric strings
+function applyRounding(val, mode) {
+  if (!val || val === "-") return "-";
+  if (mode === "0" || mode === "real") return val;
+
+  // Only parse if it's a standard numeric value (leaves items like "24½" completely untouched)
+  if (/^-?\d+(\.\d+)?$/.test(val)) {
+    const num = parseFloat(val);
+    if (mode === "up") return Math.ceil(num).toString();
+    if (mode === "down") return Math.floor(num).toString();
+  }
+  return val;
+}
+
+// 🆕 Helper to generate aligned rows
+function generateRow(label, rawValue, roundingMode) {
+  const finalValue = applyRounding(rawValue, roundingMode);
+  return `
+    <div class="guide-row">
+      <span class="guide-row-label">${label}</span>
+      <span class="guide-row-colon">:</span>
+      <span class="guide-row-value">${finalValue}</span>
+    </div>
+  `;
+}
+
 export function initGuideModal() {
   const leftMenu = document.getElementById("left-menu");
   const h2 = leftMenu.querySelector("h2");
 
-  // Create new header container to hold both buttons
   const headerContainer = document.createElement("div");
   headerContainer.id = "menu-header-container";
   headerContainer.style.display = "flex";
@@ -39,31 +64,27 @@ export function initGuideModal() {
 
   headerContainer.appendChild(guideBtn);
 
-  // Replace the old H2 with our new container
   if (h2) {
     h2.replaceWith(headerContainer);
   } else {
     leftMenu.prepend(headerContainer);
   }
 
-  // Generate the Modal DOM
   const modalOverlay = document.createElement("div");
   modalOverlay.id = "guide-modal-overlay";
   modalOverlay.className = "guide-modal-overlay";
 
   const modalContent = document.createElement("div");
   modalContent.className = "guide-modal-content";
-
-  // Prevent clicks inside the card from closing the modal
   modalContent.addEventListener("click", (e) => e.stopPropagation());
 
   modalOverlay.appendChild(modalContent);
   document.body.appendChild(modalOverlay);
 
   let currentTab = GUIDE_CONFIG.TABS[0];
+  let currentRounding = GUIDE_CONFIG.ROUND;
   let csvData = [];
 
-  // Close modal when tapping outside the card box
   modalOverlay.addEventListener("click", () => {
     modalOverlay.classList.remove("active");
   });
@@ -87,13 +108,40 @@ export function initGuideModal() {
   function renderModalContent() {
     modalContent.innerHTML = "";
 
+    // 🆕 Rounding Dropdown
+    const controlsContainer = document.createElement("div");
+    controlsContainer.className = "guide-header-controls";
+    controlsContainer.innerHTML = `
+      <label style="color: #aaa; font-size: 0.85rem; margin-right: 0.5rem;">Rounding:</label>
+      <select id="rounding-select" class="guide-rounding-select">
+        <option value="up" ${currentRounding === "up" ? "selected" : ""}>Up</option>
+        <option value="down" ${currentRounding === "down" ? "selected" : ""}>Down</option>
+        <option value="0" ${currentRounding === "0" ? "selected" : ""}>Real</option>
+      </select>
+    `;
+    modalContent.appendChild(controlsContainer);
+
+    controlsContainer
+      .querySelector("#rounding-select")
+      .addEventListener("change", (e) => {
+        currentRounding = e.target.value;
+        renderModalContent();
+      });
+
     const tabContainer = document.createElement("div");
     tabContainer.className = "guide-tabs";
 
     GUIDE_CONFIG.TABS.forEach((tab) => {
       const tabBtn = document.createElement("button");
-      tabBtn.textContent = tab;
       tabBtn.className = `guide-tab-btn ${currentTab === tab ? "active" : ""}`;
+
+      // 🆕 Inject unit span
+      const unit = GUIDE_CONFIG.UNITS[tab];
+      const unitHtml = unit
+        ? `<span class="guide-tab-unit">- ${unit}</span>`
+        : "";
+      tabBtn.innerHTML = `${tab} ${unitHtml}`;
+
       tabBtn.addEventListener("click", () => {
         currentTab = tab;
         renderModalContent();
@@ -114,7 +162,6 @@ export function initGuideModal() {
         const indoorName = row["INDOOR"] || "-";
         const pkName = row["PK"] || "-";
 
-        // Structured Layout precisely matching Indoor.jpg
         card.innerHTML = `
           <div class="guide-card-header">
             <strong>${indoorName}</strong> - <strong>${pkName}</strong>
@@ -122,24 +169,24 @@ export function initGuideModal() {
           <div class="guide-card-grid">
             <div class="guide-col">
               <div class="guide-col-title">Dimensi</div>
-              <div class="guide-row"><span>Lebar</span><span>: ${row["L"] || "-"}</span></div>
-              <div class="guide-row"><span>Panjang</span><span>: ${row["P"] || "-"}</span></div>
-              <div class="guide-row"><span>Tinggi</span><span>: ${row["T"] || "-"}</span></div>
+              ${generateRow("Lebar", row["L"], currentRounding)}
+              ${generateRow("Panjang", row["P"], currentRounding)}
+              ${generateRow("Tinggi", row["T"], currentRounding)}
             </div>
             <div class="guide-col">
               <div class="guide-col-title">Jarak Bolt</div>
-              <div class="guide-row"><span>Lebar</span><span>: ${row["L.Bolt"] || "-"}</span></div>
-              <div class="guide-row"><span>Panjang</span><span>: ${row["P.Bolt"] || "-"}</span></div>
+              ${generateRow("Lebar", row["L.Bolt"], currentRounding)}
+              ${generateRow("Panjang", row["P.Bolt"], currentRounding)}
             </div>
             <div class="guide-col">
               <div class="guide-col-title">Outlet - Supply</div>
-              <div class="guide-row"><span>Lebar</span><span>: ${row["L.Outlet"] || "-"}</span></div>
-              <div class="guide-row"><span>Tinggi</span><span>: ${row["T.Outlet"] || "-"}</span></div>
+              ${generateRow("Lebar", row["L.Outlet"], currentRounding)}
+              ${generateRow("Tinggi", row["T.Outlet"], currentRounding)}
             </div>
             <div class="guide-col">
               <div class="guide-col-title">Inlet - Return</div>
-              <div class="guide-row"><span>Lebar</span><span>: ${row["L.Inlet"] || "-"}</span></div>
-              <div class="guide-row"><span>Tinggi</span><span>: ${row["T.Inlet"] || "-"}</span></div>
+              ${generateRow("Lebar", row["L.Inlet"], currentRounding)}
+              ${generateRow("Tinggi", row["T.Inlet"], currentRounding)}
             </div>
           </div>
         `;
