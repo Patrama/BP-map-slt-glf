@@ -1,10 +1,36 @@
 <svg width="1134" height="2268" viewBox="0 0 1134 2268" fill="none" xmlns="http://www.w3.org/2000/svg">
-<rect x="736" y="1476" width="36" height="17" transform="rotate(90 736 1476)" fill="white"/>
-<rect x="736" y="1476" width="36" height="17" transform="rotate(90 736 1476)" stroke="#0000FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="7 7"/>
-<rect x="736" y="1610" width="36" height="17" transform="rotate(90 736 1610)" fill="white"/>
-<rect x="736" y="1610" width="36" height="17" transform="rotate(90 736 1610)" stroke="#0000FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="7 7"/>
-<rect x="873.898" y="1683" width="35.7953" height="16.8976" transform="rotate(90 873.898 1683)" fill="white"/>
-<rect x="873.898" y="1683" width="35.7953" height="16.8976" transform="rotate(90 873.898 1683)" stroke="#0000FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="7 7"/>
-<rect x="873.898" y="1430" width="35.7953" height="16.8976" transform="rotate(90 873.898 1430)" fill="white"/>
-<rect x="873.898" y="1430" width="35.7953" height="16.8976" transform="rotate(90 873.898 1430)" stroke="#0000FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="7 7"/>
+<g clip-path="url(#clip0_4_6809)">
+<rect x="732.036" y="1476.98" width="34.0157" height="9.07087" transform="rotate(90 732.036 1476.98)" fill="white"/>
+<rect x="729.646" y="1479.37" width="29.2362" height="4.29134" transform="rotate(90 729.646 1479.37)" stroke="#0000FF"/>
+</g>
+<rect x="731.786" y="1477.23" width="33.5157" height="8.57087" transform="rotate(90 731.786 1477.23)" stroke="#0000FF" stroke-width="0.5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="7 7"/>
+<g clip-path="url(#clip1_4_6809)">
+<rect x="732.036" y="1611" width="34.0157" height="9.07087" transform="rotate(90 732.036 1611)" fill="white"/>
+<rect x="729.646" y="1613.39" width="29.2362" height="4.29134" transform="rotate(90 729.646 1613.39)" stroke="#0000FF"/>
+</g>
+<rect x="731.786" y="1611.25" width="33.5157" height="8.57087" transform="rotate(90 731.786 1611.25)" stroke="#0000FF" stroke-width="0.5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="7 7"/>
+<g clip-path="url(#clip2_4_6809)">
+<rect x="874.898" y="1682" width="34.0157" height="9.07087" transform="rotate(90 874.898 1682)" fill="white"/>
+<rect x="872.508" y="1684.39" width="29.2362" height="4.29134" transform="rotate(90 872.508 1684.39)" stroke="#0000FF"/>
+</g>
+<rect x="874.648" y="1682.25" width="33.5157" height="8.57087" transform="rotate(90 874.648 1682.25)" stroke="#0000FF" stroke-width="0.5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="7 7"/>
+<g clip-path="url(#clip3_4_6809)">
+<rect x="874.898" y="1429" width="34.0157" height="9.07087" transform="rotate(90 874.898 1429)" fill="white"/>
+<rect x="872.508" y="1431.39" width="29.2362" height="4.29134" transform="rotate(90 872.508 1431.39)" stroke="#0000FF"/>
+</g>
+<rect x="874.648" y="1429.25" width="33.5157" height="8.57087" transform="rotate(90 874.648 1429.25)" stroke="#0000FF" stroke-width="0.5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="7 7"/>
+<defs>
+<clipPath id="clip0_4_6809">
+<rect x="732.036" y="1476.98" width="34.0157" height="9.07087" transform="rotate(90 732.036 1476.98)" fill="white"/>
+</clipPath>
+<clipPath id="clip1_4_6809">
+<rect x="732.036" y="1611" width="34.0157" height="9.07087" transform="rotate(90 732.036 1611)" fill="white"/>
+</clipPath>
+<clipPath id="clip2_4_6809">
+<rect x="874.898" y="1682" width="34.0157" height="9.07087" transform="rotate(90 874.898 1682)" fill="white"/>
+</clipPath>
+<clipPath id="clip3_4_6809">
+<rect x="874.898" y="1429" width="34.0157" height="9.07087" transform="rotate(90 874.898 1429)" fill="white"/>
+</clipPath>
+</defs>
 </svg>
