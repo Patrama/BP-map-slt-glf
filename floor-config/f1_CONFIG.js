@@ -33,11 +33,6 @@ export const STRUCTURE_1ST_FLOOR = {
           label: "A. 3 PK - Parent Room",
           children: [
             {
-              id: "f1_d_2_5_label",
-              label: "1. Label",
-              svgPath: "assets/f1/dinning/2_5_label.svg",
-            },
-            {
               id: "f1_d_2_5_ac",
               label: "2. AC",
               svgPath: "assets/f1/dinning/2_5_ac.svg",

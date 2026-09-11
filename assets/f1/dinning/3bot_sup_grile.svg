@@ -1,10 +1,26 @@
 <svg width="1134" height="2268" viewBox="0 0 1134 2268" fill="none" xmlns="http://www.w3.org/2000/svg">
-<rect x="1" y="-1" width="35.7906" height="16.8953" transform="matrix(1 -8.74228e-08 -8.74228e-08 -1 431.048 739.805)" fill="white"/>
-<rect x="1" y="-1" width="35.7906" height="16.8953" transform="matrix(1 -8.74228e-08 -8.74228e-08 -1 431.048 739.805)" stroke="#0000FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="7 7"/>
-<rect x="1" y="-1" width="35.7906" height="16.8953" transform="matrix(1 -8.74228e-08 -8.74228e-08 -1 593.823 739.805)" fill="white"/>
-<rect x="1" y="-1" width="35.7906" height="16.8953" transform="matrix(1 -8.74228e-08 -8.74228e-08 -1 593.823 739.805)" stroke="#0000FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="7 7"/>
-<rect x="-1" y="-1" width="35.9953" height="16.9976" transform="matrix(-1.31134e-07 -1 -1 1.31134e-07 358.954 559.93)" fill="white"/>
-<rect x="-1" y="-1" width="35.9953" height="16.9976" transform="matrix(-1.31134e-07 -1 -1 1.31134e-07 358.954 559.93)" stroke="#0000FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="7 7"/>
-<rect x="342.957" y="683.914" width="35.9953" height="16.9976" transform="rotate(-90 342.957 683.914)" fill="white"/>
-<rect x="342.957" y="683.914" width="35.9953" height="16.9976" transform="rotate(-90 342.957 683.914)" stroke="#0000FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="7 7"/>
+<rect x="0.25" y="-0.25" width="33.5157" height="8.57087" transform="matrix(1 0 0 -1 397.055 751.516)" fill="white"/>
+<rect x="0.25" y="-0.25" width="33.5157" height="8.57087" transform="matrix(1 0 0 -1 397.055 751.516)" stroke="#0000FF" stroke-width="0.5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="7 7"/>
+<rect x="0.5" y="-0.5" width="29.2362" height="4.29134" transform="matrix(1 0 0 -1 398.945 749.126)" stroke="#0000FF"/>
+<rect x="0.25" y="-0.25" width="33.5157" height="8.57087" transform="matrix(1 0 0 -1 559.055 751.516)" fill="white"/>
+<rect x="0.25" y="-0.25" width="33.5157" height="8.57087" transform="matrix(1 0 0 -1 559.055 751.516)" stroke="#0000FF" stroke-width="0.5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="7 7"/>
+<rect x="0.5" y="-0.5" width="29.2362" height="4.29134" transform="matrix(1 0 0 -1 560.945 749.126)" stroke="#0000FF"/>
+<g clip-path="url(#clip0_62_1275)">
+<rect width="34.0157" height="9.07087" transform="matrix(-4.37114e-08 -1 -1 4.37114e-08 342.071 562.016)" fill="white"/>
+<rect x="-0.5" y="-0.5" width="29.2362" height="4.29134" transform="matrix(-4.37114e-08 -1 -1 4.37114e-08 339.181 559.126)" stroke="#0000FF"/>
+</g>
+<rect x="-0.25" y="-0.25" width="33.5157" height="8.57087" transform="matrix(-4.37114e-08 -1 -1 4.37114e-08 341.571 561.516)" stroke="#0000FF" stroke-width="0.5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="7 7"/>
+<g clip-path="url(#clip1_62_1275)">
+<rect x="333" y="683.016" width="34.0157" height="9.07087" transform="rotate(-90 333 683.016)" fill="white"/>
+<rect x="335.39" y="680.626" width="29.2362" height="4.29134" transform="rotate(-90 335.39 680.626)" stroke="#0000FF"/>
+</g>
+<rect x="333.25" y="682.766" width="33.5157" height="8.57087" transform="rotate(-90 333.25 682.766)" stroke="#0000FF" stroke-width="0.5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="7 7"/>
+<defs>
+<clipPath id="clip0_62_1275">
+<rect width="34.0157" height="9.07087" transform="matrix(-4.37114e-08 -1 -1 4.37114e-08 342.071 562.016)" fill="white"/>
+</clipPath>
+<clipPath id="clip1_62_1275">
+<rect x="333" y="683.016" width="34.0157" height="9.07087" transform="rotate(-90 333 683.016)" fill="white"/>
+</clipPath>
+</defs>
 </svg>

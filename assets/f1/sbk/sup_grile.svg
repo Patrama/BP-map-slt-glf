@@ -1,8 +1,18 @@
 <svg width="1134" height="2268" viewBox="0 0 1134 2268" fill="none" xmlns="http://www.w3.org/2000/svg">
-<rect x="942.536" y="1240.74" width="35.7906" height="16.8953" transform="rotate(-180 942.536 1240.74)" fill="white"/>
-<rect x="942.536" y="1240.74" width="35.7906" height="16.8953" transform="rotate(-180 942.536 1240.74)" stroke="#0000FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="7 7"/>
-<rect x="942.536" y="1617.7" width="35.7906" height="16.8953" transform="rotate(-180 942.536 1617.7)" fill="white"/>
-<rect x="942.536" y="1617.7" width="35.7906" height="16.8953" transform="rotate(-180 942.536 1617.7)" stroke="#0000FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="7 7"/>
-<rect x="1040.67" y="1413.72" width="35.7906" height="16.8953" transform="rotate(-180 1040.67 1413.72)" fill="white"/>
-<rect x="1040.67" y="1413.72" width="35.7906" height="16.8953" transform="rotate(-180 1040.67 1413.72)" stroke="#0000FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="7 7"/>
+<rect x="939.766" y="1618.45" width="33.5157" height="8.57087" transform="rotate(-180 939.766 1618.45)" fill="white"/>
+<rect x="939.766" y="1618.45" width="33.5157" height="8.57087" transform="rotate(-180 939.766 1618.45)" stroke="#0000FF" stroke-width="0.5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="7 7"/>
+<rect x="937.626" y="1616.31" width="29.2362" height="4.29134" transform="rotate(-180 937.626 1616.31)" stroke="#0000FF"/>
+<g clip-path="url(#clip0_62_1275)">
+<rect x="1008" y="1422.02" width="34.0157" height="9.07087" transform="rotate(-90 1008 1422.02)" fill="white"/>
+<rect x="1010.39" y="1419.63" width="29.2362" height="4.29134" transform="rotate(-90 1010.39 1419.63)" stroke="#0000FF"/>
+</g>
+<rect x="1008.25" y="1421.77" width="33.5157" height="8.57087" transform="rotate(-90 1008.25 1421.77)" stroke="#0000FF" stroke-width="0.5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="7 7"/>
+<rect x="909.25" y="1241.25" width="33.5157" height="8.57087" fill="white"/>
+<rect x="909.25" y="1241.25" width="33.5157" height="8.57087" stroke="#0000FF" stroke-width="0.5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="7 7"/>
+<rect x="911.39" y="1243.39" width="29.2362" height="4.29134" stroke="#0000FF"/>
+<defs>
+<clipPath id="clip0_62_1275">
+<rect x="1008" y="1422.02" width="34.0157" height="9.07087" transform="rotate(-90 1008 1422.02)" fill="white"/>
+</clipPath>
+</defs>
 </svg>
